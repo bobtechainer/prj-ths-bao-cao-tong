@@ -27,7 +27,10 @@ describe("buildStudentJourney", () => {
   it("mỗi narration có figures mang số", () => {
     const j = buildStudentJourney(STUDENT_HERO, "ca-nam", "Địa lí");
     const lines = [j.overview.narration, j.prep.narration, j.convergence.narration];
-    for (const c of j.cycles) lines.push(c.lop.narration, c.nha.narration);
+    for (const c of j.cycles) {
+      lines.push(c.lop.narration, c.nha.narration);
+      if (c.exam?.narration) lines.push(c.exam.narration);
+    }
     for (const l of lines) {
       expect(l.figures.length).toBeGreaterThan(0);
       for (const f of l.figures) expect(/\d/.test(f.value)).toBe(true);
