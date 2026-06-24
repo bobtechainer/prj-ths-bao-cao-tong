@@ -11,7 +11,7 @@ const lines: NarratedLine[] = [
 describe("TroLySummary", () => {
   test("hiện tiêu đề mặc định, từng câu kèm figure cạnh nhau", () => {
     render(<TroLySummary lines={lines} />);
-    expect(screen.getByText("Trợ lý tổng hợp")).toBeInTheDocument();
+    expect(screen.getByText("Trợ lý tóm tắt")).toBeInTheDocument();
     expect(screen.getByText(/Toàn ngành nộp được/)).toBeInTheDocument();
     expect(screen.getByText("Hoàn thành")).toBeInTheDocument();
     expect(screen.getByText("88%")).toBeInTheDocument();
