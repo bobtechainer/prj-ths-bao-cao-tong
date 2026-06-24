@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useReduced } from "@/components/motion";
 import { cn } from "@/lib/utils";
@@ -15,12 +15,14 @@ export function PresentationMode({
   open: boolean;
   onClose: () => void;
   initialIndex?: number;
-}) {
+}): JSX.Element | null {
   const reduced = useReduced();
   const [idx, setIdx] = useState(initialIndex);
+  const wasOpen = useRef(false);
 
   useEffect(() => {
-    if (open) setIdx(initialIndex);
+    if (open && !wasOpen.current) setIdx(initialIndex);
+    wasOpen.current = open;
   }, [open, initialIndex]);
 
   useEffect(() => {
