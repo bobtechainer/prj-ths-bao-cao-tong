@@ -2,9 +2,9 @@ import type { EventStatus } from "@/data/types";
 import { cn } from "@/lib/utils";
 
 const DOT: Record<EventStatus, string> = {
-  past: "bg-muted-foreground/40",
+  past: "bg-muted-foreground",
   current: "bg-brand-600 ring-4 ring-brand-100",
-  upcoming: "border-2 border-dashed border-muted-foreground/40 bg-card",
+  upcoming: "bg-card border-2 border-dashed border-muted-foreground/50",
 };
 
 /** Trục thời gian dọc: mỗi mốc một chấm + nhãn; bấm cuộn tới chương tương ứng. */
@@ -22,13 +22,14 @@ export function TimelineRail({
         {items.map((it) => {
           const active = it.id === activeId;
           return (
-            <li key={it.id} data-active={active} className="relative">
+            <li key={it.id} data-active={active} data-status={it.status} className="relative">
               <a
                 href={`#${it.id}`}
                 aria-current={active ? "location" : undefined}
                 className="flex items-center gap-2.5 text-sm transition-colors hover:text-brand-700"
               >
                 <span
+                  data-status={it.status}
                   className={cn(
                     "relative z-10 size-3.5 shrink-0 rounded-full",
                     DOT[it.status]

@@ -20,4 +20,34 @@ describe("TimelineRail", () => {
     const active = screen.getByText("Chặng 1").closest("[data-active]");
     expect(active?.getAttribute("data-active")).toBe("true");
   });
+
+  test("active item has aria-current='location'", () => {
+    render(
+      <TimelineRail
+        items={[
+          { id: "mo-dau", label: "Mở đầu", status: "past" },
+          { id: "chang-1", label: "Chặng 1", status: "current" },
+        ]}
+        activeId="chang-1"
+      />
+    );
+    const activeAnchor = screen.getByText("Chặng 1").closest("a");
+    expect(activeAnchor?.getAttribute("aria-current")).toBe("location");
+  });
+
+  test("statuses render with distinct data-status attributes", () => {
+    const { container } = render(
+      <TimelineRail
+        items={[
+          { id: "mo-dau", label: "Mở đầu", status: "past" },
+          { id: "chang-1", label: "Chặng 1", status: "current" },
+          { id: "hoi-tu", label: "Hội tụ", status: "upcoming" },
+        ]}
+        activeId="chang-1"
+      />
+    );
+    expect(container.querySelectorAll('li[data-status="past"]')).toHaveLength(1);
+    expect(container.querySelectorAll('li[data-status="current"]')).toHaveLength(1);
+    expect(container.querySelectorAll('li[data-status="upcoming"]')).toHaveLength(1);
+  });
 });
