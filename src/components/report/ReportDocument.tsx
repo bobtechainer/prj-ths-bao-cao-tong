@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { mockRepository as repo } from "@/data/mockRepository";
 import { useUiStore } from "@/stores/uiStore";
-import type { ClassReport, ExamCodeReport, QuestionReport, StudentJourney, NarratedLine, StudentCycle } from "@/data/types";
+import type { ClassReport, ExamCodeReport, QuestionReport, StudentJourney, NarratedLine, StudentCycle, ClassJourney, ClassCycle } from "@/data/types";
 import { KY_LABEL } from "@/data/types";
 import type { ExportScope } from "@/lib/export/exportService";
 import { diem, int, pct } from "@/lib/format";
@@ -350,13 +350,108 @@ function StudentJourneyPages({ j }: { j: StudentJourney }) {
   );
 }
 
+function ClassCyclePage({ c, idx }: { c: ClassCycle; idx: number }) {
+  const s = c.lop.session;
+  return (
+    <Page footer={`Chặng ${idx}: ${c.label}`}>
+      <CycleHead label={c.label} range={c.range} status={c.status} />
+
+      <H>Trên lớp</H>
+      <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+        <Stat label="Sĩ số có mặt" value={int(s.attendance.present)} />
+        <Stat label="Chuyên cần" value={pct(s.attendance.present / (s.attendance.present + s.attendance.absent))} />
+        <Stat label="Thời lượng" value={`${s.durationMin} phút`} />
+      </div>
+      <NarratorLine line={c.lop.narration} />
+
+      <H>Ở nhà</H>
+      <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+        <Stat label="Hoàn thành" value={pct(c.nha.completionRate)} />
+        <Stat label="Số nhiệm vụ" value={int(c.nha.report.missions.length)} />
+        <Stat label="Học sinh" value={int(c.nha.report.students.length)} />
+      </div>
+      <NarratorLine line={c.nha.narration} />
+
+      {c.exam && (
+        <>
+          <H>Bài kiểm tra cuối chặng — {c.exam.report.title}</H>
+          <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+            <Stat label="Điểm TB" value={diem(c.exam.report.avg)} />
+            <Stat label="Trung vị" value={diem(c.exam.report.median)} />
+            <Stat label="Số bài" value={int(c.exam.report.numStudents)} />
+          </div>
+          <NarratorLine line={c.exam.narration} />
+        </>
+      )}
+    </Page>
+  );
+}
+
+function ClassJourneyPages({ j }: { j: ClassJourney }) {
+  return (
+    <>
+      <Page footer="Mở đầu">
+        <H>Mở đầu</H>
+        <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+          <Stat label="Số học sinh" value={int(j.overview.numStudents)} />
+          <Stat label="Điểm thi TB" value={diem(j.overview.examAvg)} />
+          <Stat label="Chỉ số học tập" value={`${j.overview.learningIndex.total}/100`} />
+          <Stat label="Cần hỗ trợ" value={int(j.overview.needSupport)} />
+        </div>
+        <NarratorLine line={j.overview.narration} />
+
+        <H>Chuẩn bị</H>
+        <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+          <Stat label="Xem trước" value={`${j.prep.surface.xemTruoc.count}/${j.prep.surface.xemTruoc.total}`} />
+          <Stat label="Bài chuẩn bị" value={`${j.prep.surface.baiChuanBi.count}/${j.prep.surface.baiChuanBi.total}`} />
+          <Stat label="Đúng giờ" value={`${j.prep.surface.dungGio.count}/${j.prep.surface.dungGio.total}`} />
+        </div>
+        <NarratorLine line={j.prep.narration} />
+      </Page>
+
+      {j.cycles.map((c, i) => (
+        <ClassCyclePage key={c.id} c={c} idx={i + 1} />
+      ))}
+
+      <Page footer="Hội tụ">
+        <H>Hội tụ</H>
+        <NarratorLine line={j.convergence.narration} />
+        <H>Chủ đề cần củng cố toàn lớp</H>
+        <Bars
+          rows={j.convergence.topics.map((t) => ({
+            label: t.topic,
+            pct: Math.round(t.accuracyAvg * 100),
+            color: rate(t.accuracyAvg),
+          }))}
+        />
+        <H>Học sinh cần hỗ trợ</H>
+        <div style={{ fontSize: 12.5, lineHeight: 1.7 }}>
+          {j.convergence.needSupport.map((s) => s.name).join(", ") || "—"}
+        </div>
+        {j.convergence.nextExam && (
+          <div style={{ marginTop: 12, fontSize: 12.5, color: MUTED }}>
+            Mốc tiếp theo: <b style={{ color: NAVY }}>{j.convergence.nextExam.title}</b> · {j.convergence.nextExam.date}
+          </div>
+        )}
+      </Page>
+    </>
+  );
+}
+
 export function ReportDocument({ scope }: { scope: ExportScope }) {
   if (scope.kind === "lop") {
+    const j = repo.getClassJourney(scope.id, "ca-nam", "Địa lí");
     const r = repo.getClassReport(scope.id);
     const school = repo.getSchool(r.klass.schoolId)?.name ?? "";
     return (
       <>
-        <Cover title={`Lớp ${r.klass.name}`} subtitle={school} term={`${r.thi.title} · ${r.thi.term}`} ring={r.learningIndex.total} />
+        <Cover
+          title={`Lớp ${j.klass.name}`}
+          subtitle={school}
+          term={`Hành trình ${KY_LABEL["ca-nam"]} · môn ${j.slice.subject} · 2025–2026`}
+          ring={j.overview.learningIndex.total}
+        />
+        <ClassJourneyPages j={j} />
         <ClassPages r={r} />
       </>
     );
