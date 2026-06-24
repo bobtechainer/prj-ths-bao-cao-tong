@@ -142,7 +142,6 @@ export function buildStudentChapters(
   chapters.push({
     id: "mo-dau",
     title: "Mở đầu",
-    status: "past",
     render: () => (
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-center gap-8 rounded-2xl border bg-card p-5 shadow-sm">
@@ -159,7 +158,6 @@ export function buildStudentChapters(
   chapters.push({
     id: "chuan-bi",
     title: "Chuẩn bị",
-    status: "past",
     render: () => (
       <div className="space-y-4">
         <div className="grid grid-cols-3 gap-2">
@@ -208,7 +206,6 @@ export function buildStudentChapters(
   chapters.push({
     id: "hoi-tu",
     title: "Hội tụ",
-    status: j.convergence.nextExam ? "upcoming" : "current",
     render: () => (
       <div className="space-y-4">
         <Narrator line={j.convergence.narration} />
