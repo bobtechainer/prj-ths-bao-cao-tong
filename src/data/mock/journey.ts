@@ -1,11 +1,12 @@
 import type {
   Ky, Subject, StudentJourney, StudentCycle,
   CycleSession, MissionStudentReportView,
+  ClassJourney, ClassCycle,
 } from "@/data/types";
 import {
   buildStudentProfile, buildClassReport,
   studentExamsForKy, studentSessionsForKy, studentMissionsForKy, missionDate,
-  buildStudentPrepSurface,
+  buildStudentPrepSurface, buildClassPrepSurface,
   type DatedExam,
 } from "./builders";
 import {
@@ -16,6 +17,7 @@ import { mean } from "@/lib/metrics";
 import {
   narrateStudentOverview, narratePrep,
   narrateClassroom, narrateHome, narrateExam, narrateConvergence,
+  narrateClassOverview, narrateClassExam,
 } from "@/lib/narrate";
 import type { UpcomingExam } from "@/data/types";
 
@@ -148,5 +150,104 @@ export function buildStudentJourney(studentId: string, term: Ky, subject: Subjec
     },
     availableSlices: { terms: ["ky-1", "ky-2", "ca-nam"], subjects: ["Địa lí"] },
     empty,
+  };
+}
+
+export function buildClassJourney(classId: string, term: Ky, subject: Subject): ClassJourney {
+  const world = getWorld();
+  const report = buildClassReport(classId);
+  const now = DEMO_NOW;
+  const nextExam = resolveNextExam(now);
+  const boundaries = KY_BOUNDARIES[term];
+
+  const needSupportRows = report.roster.filter((r) => r.needSupport);
+  const completionRate = mean(report.nha.missions.map((m) => m.completionRate));
+
+  const cycles: ClassCycle[] = boundaries.map((_, k) => {
+    const range = cycleRange(term, k, boundaries);
+    const status = statusOf(range.to, now);
+    const isLast = k === boundaries.length - 1;
+    return {
+      id: `ccyc-${k}`,
+      label: `Chặng ${k + 1}`,
+      range,
+      status,
+      lop: {
+        session: report.lop,
+        narration: narrateClassroom(
+          {
+            attendanceRate:
+              report.lop.attendance.present /
+              (report.lop.attendance.present + report.lop.attendance.absent),
+            quizAccuracyAvg: mean(report.lop.quizzes.map((q) => q.accuracy)),
+            numSessions: 1,
+          },
+          false
+        ),
+      },
+      nha: {
+        report: report.nha,
+        completionRate,
+        narration: narrateHome(
+          {
+            completionRate,
+            onTimeRate: report.nha.students.filter((s) => !s.late).length / report.nha.students.length,
+            avgScore: Math.round(mean(report.nha.missions.map((m) => m.avgScore)) * 10) / 10,
+            numMissions: report.nha.missions.length,
+          },
+          false
+        ),
+      },
+      exam: isLast
+        ? {
+            report: report.thi,
+            narration: narrateClassExam(
+              {
+                avg: report.thi.avg,
+                median: report.thi.median,
+                numStudents: report.thi.numStudents,
+                title: report.thi.title,
+              },
+              status
+            ),
+          }
+        : null,
+    };
+  });
+
+  const prepSurface = buildClassPrepSurface(classId, term);
+  const examAvg = report.thi.avg;
+  void world;
+
+  return {
+    kind: "class",
+    slice: { term, subject },
+    now,
+    klass: report.klass,
+    schoolName: getWorld().schoolById.get(report.klass.schoolId)?.name ?? "",
+    overview: {
+      numStudents: report.students.length,
+      examAvg,
+      learningIndex: report.learningIndex,
+      effortIndex: report.effortIndex,
+      needSupport: needSupportRows.length,
+      narration: narrateClassOverview({
+        numStudents: report.students.length,
+        examAvg,
+        learningIndex: report.learningIndex,
+        effortIndex: report.effortIndex,
+        needSupport: needSupportRows.length,
+      }),
+    },
+    prep: { surface: prepSurface, narration: narratePrep(prepSurface, false) },
+    cycles,
+    convergence: {
+      topics: report.weakTopics,
+      needSupport: needSupportRows,
+      nextExam,
+      narration: narrateConvergence(report.weakTopics, false, nextExam),
+    },
+    availableSlices: { terms: ["ky-1", "ky-2", "ca-nam"], subjects: [report.subject] },
+    empty: report.students.length === 0,
   };
 }
