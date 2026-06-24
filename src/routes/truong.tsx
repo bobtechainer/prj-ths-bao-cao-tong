@@ -1,12 +1,13 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Users, CalendarCheck, ClipboardList, HeartHandshake, GraduationCap, Sigma } from "lucide-react";
 import { mockRepository as repo } from "@/data/mockRepository";
-import { SUBJECTS, type Subject } from "@/data/types";
+import { SUBJECTS, type Subject, type NarratedLine } from "@/data/types";
 import { mean, normalize } from "@/lib/metrics";
 import { diem, int, pct } from "@/lib/format";
 import { useUiStore } from "@/stores/uiStore";
 import { PageHeader } from "@/components/report/PageHeader";
 import { ExecutiveHero } from "@/components/report/ExecutiveHero";
+import { TroLySummary } from "@/components/report/TroLySummary";
 import { ExportButton } from "@/components/report/ExportButton";
 import { ConvergencePanel } from "@/components/report/ConvergencePanel";
 import { ChartCard } from "@/components/charts/chart-kit";
@@ -40,6 +41,23 @@ export default function Truong() {
     `Toàn trường đã nộp được ${pct(r.kpis.completionRate)} số bài về nhà được giao.`,
   ];
 
+  const troLyLines: NarratedLine[] = [
+    {
+      text: `Lớp ${best.name} đang có kết quả học tập tốt nhất trường.`,
+      figures: [{ label: "Điểm TB lớp đầu", value: diem(best.avg) }],
+    },
+    {
+      text: weakNames.length
+        ? `Có chủ đề học sinh sai nhiều ở cả ba mặt — giáo viên bộ môn nên chữa kỹ lại: ${weakNames.join(", ")}.`
+        : "Chưa có chủ đề nào học sinh sai nhiều ở cả ba mặt (trên lớp, ở nhà, bài thi).",
+      figures: [{ label: "Chủ đề cần chú ý", value: String(weakNames.length) }],
+    },
+    {
+      text: "Toàn trường đã nộp được phần lớn bài về nhà được giao.",
+      figures: [{ label: "Tỉ lệ HT NV", value: pct(r.kpis.completionRate) }],
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -62,6 +80,8 @@ export default function Truong() {
         ]}
         highlights={highlights}
       />
+
+      <TroLySummary lines={troLyLines} />
 
       <Reveal>
         <ChartCard
