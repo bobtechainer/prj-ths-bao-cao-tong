@@ -154,7 +154,6 @@ export function buildStudentJourney(studentId: string, term: Ky, subject: Subjec
 }
 
 export function buildClassJourney(classId: string, term: Ky, subject: Subject): ClassJourney {
-  const world = getWorld();
   const report = buildClassReport(classId);
   const now = DEMO_NOW;
   const nextExam = resolveNextExam(now);
@@ -217,7 +216,6 @@ export function buildClassJourney(classId: string, term: Ky, subject: Subject): 
 
   const prepSurface = buildClassPrepSurface(classId, term);
   const examAvg = report.thi.avg;
-  void world;
 
   return {
     kind: "class",
