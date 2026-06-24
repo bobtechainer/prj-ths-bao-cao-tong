@@ -1,0 +1,59 @@
+{
+  "typeConsistency": [
+    {
+      "issue": "Plan 03 Task 1 buildCycleChapter gán `const thi = c.exam?.report ?? null;` (thi là ExamReport) nhưng sau đó truy cập SAI `thi.report.avg`, `thi.report.bands`, `thi.report.histogram`, `thi.report.codes`, `thi.report.topMissed` và `thi.narration`. Theo CONTRACT ClassCycle.exam = { report: ExamReport; narration: NarratedLine }. ExamReport KHÔNG có field `.report` cũng KHÔNG có `.narration`. Đây là lỗi tsc ở nhiều chỗ (block Kỳ thi: BandDistribution/ScoreHistogram/CodeCompare/TopMissedTable + Narrator thi).",
+      "where": "src/components/journey/classChapters.tsx — buildCycleChapter (Plan 03 Task 1)",
+      "fix": "Tách rõ: `const exam = c.exam; const thi = exam?.report ?? null;`. Dùng `thi.avg`, `thi.bands`, `thi.histogram`, `thi.codes`, `thi.codes[0].topMissed` (KHÔNG `thi.report.*`). Narrator kỳ thi dùng `exam.narration` (KHÔNG `thi.narration`). Trong sumItems sửa `thi ? diem(thi.report.avg ?? thi.avg)` thành `thi ? diem(thi.avg)`."
+    },
+    {
+      "issue": "Plan 04 Task 5 ClassCyclePage truy cập `int(s.attendance)` và `pct(s.engagement)` với s:SessionAnalytics. Nhưng `attendance` là AttendanceBreakdown (object), `engagement` là EngagementPoint[] (mảng) — KHÔNG phải number. `int`/`pct` (src/lib/format.ts) nhận number → lỗi tsc.",
+      "where": "src/components/report/ReportDocument.tsx — ClassCyclePage (Plan 04 Task 5)",
+      "fix": "Sĩ số có mặt = `int(s.attendance.present)`. Bỏ `pct(s.engagement)`; thay bằng số liệu number thật, vd `int(s.attendance.present + s.attendance.late)` hoặc tỉ lệ chuyên cần `pct(s.attendance.present / (s.attendance.present + s.attendance.absent))`. Thời lượng `s.durationMin` là number nên `${s.durationMin} phút` OK."
+    },
+    {
+      "issue": "Plan 01 Task 7 buildClassJourney narrateClassroom dùng `report.lop.attendance.present/(present+absent)` và `mean(report.lop.quizzes.map(q=>q.accuracy))`. QuizItem có field `accuracy` (OK) nhưng cần xác nhận report.lop là SessionAnalytics — đúng. Tuy nhiên `narrateHome` cấp lớp truyền `completionRate = mean(report.nha.missions.map(m=>m.completionRate))` trong khi ClassCycle.nha.completionRate theo CONTRACT cũng là number — nhất quán. Cảnh báo nhẹ: completionRate cấp lớp KHÔNG lấy số thô đếm mà là trung bình tỉ lệ → vẫn truy được input→output nhưng không phải 'số thô'.",
+      "where": "src/data/mock/journey.ts buildClassJourney (Plan 01 Task 7)",
+      "fix": "Chấp nhận được vì completionRate là tỉ lệ phái sinh; đảm bảo narration figures vẫn kèm số (đang có). Không bắt buộc sửa, chỉ lưu ý ràng buộc 'số thô' áp cho con số bịa gốc, không phải tỉ lệ tổng hợp."
+    },
+    {
+      "issue": "Plan 02 Task 9 studentChapters dùng `<Chapter>` GIÁN TIẾP qua Journey (Journey tự bọc Chapter). Nhưng Plan 03 Task 1 classChapters TỰ bọc thêm `<Chapter id title status>` BÊN TRONG render() của mỗi ChapterDef — trong khi Journey (Plan 02 Task 8) ĐÃ tự render `<Chapter key id title status>{c.render()}</Chapter>` cho mọi chapter. Hệ quả: bản lớp sẽ lồng Chapter trong Chapter (tiêu đề + section id trùng lặp, anchor #id xuất hiện 2 lần). Student KHÔNG lồng, Class CÓ lồng → KHÔNG nhất quán giữa hai plan.",
+      "where": "Journey.tsx (Plan 02 Task 8) vs classChapters.tsx render() (Plan 03 Task 1) + ReportDocument không liên quan",
+      "fix": "Trong Plan 03 classChapters, render() KHÔNG được tự bọc <Chapter> (vì Journey đã bọc). Bỏ <Chapter ...> ngoài cùng trong moDau/chuanBi/buildCycleChapter/hoiTu, trả thẳng nội dung như studentChapters. (Hoặc thống nhất Journey KHÔNG bọc Chapter và mọi builder tự bọc — nhưng phải CHỌN MỘT và áp cho cả hai plan.)"
+    },
+    {
+      "issue": "Plan 03 Task 1 import `Chapter` từ '@/components/journey/Journey' nhưng Journey.tsx (Plan 02 Task 8) CHỈ export `Journey` và re-export type `ChapterDef`; KHÔNG re-export component `Chapter`. CONTRACT cũng đặt Chapter là <Chapter> riêng (file Chapter.tsx). Import `{ Chapter } from '@/components/journey/Journey'` sẽ fail.",
+      "where": "src/components/journey/classChapters.tsx import (Plan 03 Task 1)",
+      "fix": "Nếu vẫn cần Chapter thì import từ '@/components/journey/Chapter'. Nhưng theo fix mục lồng Chapter ở trên, nên BỎ hẳn Chapter khỏi classChapters."
+    },
+    {
+      "issue": "Plan 03 Task 1 test gọi `screen.getByText(first.name).click()` trên ClassRosterRow render bởi RosterTable. RosterTable.onRowClick gắn ở hàng (TableRow), nhưng click trực tiếp text cell có thể không bubble tới handler tùy cấu trúc; rủi ro test giòn. Ngoài ra test dùng `.click()` thay vì fireEvent — không nhất quán với các test khác.",
+      "where": "src/components/journey/classChapters.test.tsx (Plan 03 Task 1)",
+      "fix": "Dùng fireEvent.click(screen.getByText(first.name)) và đảm bảo RosterTable đặt onClick ở TableRow bao trùm cell tên (đã đúng trong RosterTable hiện tại)."
+    },
+    {
+      "issue": "Plan 01 Task 6 buildStudentJourney: dòng tính `cExam` rối và có thể lấy sai phần tử: `(examBuckets[k] ?? [])[examBuckets[k]?.length ? examBuckets[k].length-1 : 0] ?? null`. Khi bucket rỗng trả undefined→null OK, nhưng biểu thức dễ lỗi off-by-one và khó đọc.",
+      "where": "src/data/mock/journey.ts buildStudentJourney (Plan 01 Task 6)",
+      "fix": "Thay bằng: `const cExam = (examBuckets[k] ?? []).at(-1) ?? null;` cho rõ ràng, lấy kỳ thi cuối của chặng."
+    },
+    {
+      "issue": "Plan 02 Task 7 PresentationMode: Interfaces ghi 'Consumes ChapterDef từ ./Journey ... import type từ ./types-journey'. Mô tả mâu thuẫn nhưng code thực import từ './types-journey' (đúng). CONTRACT nói 'ChapterDef export trong Journey.tsx' → Journey re-export là đủ. Nhất quán, chỉ phần mô tả Interfaces tự mâu thuẫn.",
+      "where": "Plan 02 Task 7 khối Interfaces (văn bản)",
+      "fix": "Sửa câu mô tả Consumes cho khớp code: 'import type { ChapterDef } from \"./types-journey\"'. Không ảnh hưởng code."
+    }
+  ],
+  "specGaps": [
+    "SPEC yêu cầu 'Cuộn-snap': Plan 02 Task 8 Journey đặt `snap-y snap-mandatory` trên container nhưng container đó KHÔNG có chiều cao cố định / overflow-auto, và Chapter dùng `snap-start`. Scroll-snap chỉ hoạt động khi phần tử cuộn là chính container có overflow + height giới hạn. Hiện cuộn ở body/window → snap có thể không kích hoạt. CONTRACT nói 'container scroll-snap (snap khi !reducedMotion)'. Cần xác nhận container là vùng cuộn thật (overflow-y-auto + max-h) hoặc đặt snap trên html/body. Không task nào kiểm thử hành vi snap thực.",
+    "SPEC: 'chỉ chữa/ôn trước [sự kiện] khi sự kiện còn tương lai; mốc DEMO_NOW sau thi thử trước kỳ thi THPT'. narrateExam (Plan 01 Task 5) bản học sinh có verb 'sẽ làm'/'đã làm' theo status, nhưng KHÔNG có kiểm thử đảm bảo cụm thì trong narrateClassroom/narrateHome đúng với chặng upcoming (các hàm này không nhận status nên luôn dùng thì quá khứ 'đã'/hiện tại). Với chặng tương lai (upcoming) câu 'Trên lớp em đi học X% số buổi' đọc sai thì. SPEC nhấn mạnh 'đúng thì' xuyên suốt, không chỉ ở exam/convergence.",
+    "SPEC: 'Bản Giáo viên ... drill xuống hành trình học sinh'. Plan 03 chỉ drill từ danh sách 'Học sinh cần hỗ trợ' (convergence.needSupport) sang /app/hoc-sinh/:id. KHÔNG có lối drill từ bảng roster đầy đủ của lớp (chỉ needSupport). SPEC 'drill xuống hành trình học sinh' ngụ ý từ toàn lớp; hiện chỉ phủ nhóm cần hỗ trợ.",
+    "SPEC: 'Phòng/Hiệu trưởng chỉ thêm tóm tắt Trợ lý.' Plan 04 Task 2/3 gắn TroLySummary vào phong.tsx & truong.tsx. Nhưng KHÔNG plan nào kiểm tra/giữ ràng buộc rằng các route này dựng NarratedLine có figures bám số đúng input→output (figures lấy từ KPI thật) — chỉ smoke text. Đủ ở mức tối thiểu nhưng không có test khẳng định mỗi figure truy được nguồn.",
+    "SPEC: 'PDF in dạng dài'. Plan 04 Task 4/5 in StudentJourneyPages/ClassJourneyPages nhưng slice in CỐ ĐỊNH 'ca-nam'/'Địa lí', bỏ qua Kỳ×Môn người dùng đang xem trên màn hình. SPEC không nói rõ nhưng kỳ vọng bản in khớp lát đang xem. Hiện ExportButton (scope kind/id/title) không truyền term/subject → không thể in đúng lát đang chọn. Khoảng trống thiết kế giữa Plan 02/03 (route) và Plan 04 (in)."
+  ],
+  "placeholderHits": [
+    "Plan 03 Task 1: code mẫu có `const completion = overview.examAvg; // placeholder không dùng` và `void completion;` — đây là BIẾN CHẾT/PLACEHOLDER nằm ngay trong code 'tối thiểu'. Có step phụ yêu cầu xóa, nhưng vi phạm quy tắc 'TUYỆT ĐỐI không placeholder' và khiến code mẫu ban đầu không sạch. Nên bỏ hẳn khỏi code mẫu, không để rồi xóa.",
+    "Plan 03 Task 3: code route lop.tsx có `const TERMS: Ky[] = [...]` + `void TERMS;` và import `useNavigate` LẶP (2 lần) — kèm step 'xóa biến chết'. Lại là dạng đưa code thừa rồi yêu cầu xóa, không phải code tối thiểu sạch ngay.",
+    "Plan 03 Task 4: Step thứ ba ghi 'Code: không sửa vỏ Plan 02. Nếu test 1 đỏ do userEvent cần async...' — đây là hướng dẫn mơ hồ/điều kiện ('nếu... đảm bảo await'), không phải code cụ thể; test còn có `void user;` ở case 2 (không dùng userEvent thật) — test placeholder yếu.",
+    "Plan 03 Task 5: toàn Task là điều kiện 'nếu file đã tồn tại thì bỏ qua' — TRÙNG với Plan 04 Task 1 (cả hai tạo src/components/report/TroLySummary.tsx). Mâu thuẫn SỞ HỮU FILE: Plan 03 Task 5 và Plan 04 Task 1 cùng tạo một file với nội dung KHÁC nhau (Plan 03 dùng <Narrator>, title mặc định 'Trợ lý tóm tắt'; Plan 04 tự render, title mặc định 'Trợ lý tổng hợp', return null khi rỗng). Phải chốt MỘT chủ sở hữu.",
+    "Plan 04 Task 4: 'Slice in mặc định: term:\"ca-nam\", subject:\"Địa lí\"' — hardcode lát, hợp lệ về cú pháp nhưng là giả định cứng (xem specGaps PDF)."
+  ],
+  "verdict": "CHƯA ĐẠT — cần sửa trước khi thực thi. Có 2 lỗi tsc chắc chắn (Plan 03 `thi.report.*`/`thi.narration` sai cấu trúc ClassCycle.exam; Plan 04 ClassCyclePage `int(s.attendance)`/`pct(s.engagement)` truyền object/mảng vào hàm nhận number), 1 lỗi import (Plan 03 import { Chapter } from Journey.tsx — Journey không export Chapter), và 1 lỗi kiến trúc nhất quán (Plan 03 lồng <Chapter> bên trong render() trong khi Journey đã tự bọc Chapter — student không lồng, class có lồng → trùng anchor/tiêu đề). Thêm xung đột SỞ HỮU FILE TroLySummary.tsx giữa Plan 03 Task 5 và Plan 04 Task 1 (hai nội dung khác nhau, hai title mặc định khác nhau). Các điểm còn lại: vài chỗ 'đưa code thừa rồi xóa' vi phạm quy tắc không-placeholder, nghi vấn scroll-snap không kích hoạt do container không phải vùng cuộn, và 'đúng thì' của narrateClassroom/narrateHome cho chặng upcoming. Type/tên chính (getStudentJourney/getClassJourney, StudentJourney/ClassJourney, NarratedLine.figures, KY_LABEL, DEMO_NOW/OFFICIAL_EXAM, ChapterDef, KyMonPicker/FocusPicker/TimelineRail/PresentationMode/CycleBand/Narrator/Journey) khớp CONTRACT và khớp nhau giữa Plan 01↔02↔04; sai lệch tập trung ở Plan 03 và nhánh in lớp Plan 04."
+}
