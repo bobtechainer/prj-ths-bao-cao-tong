@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { mockRepository as repo } from "@/data/mockRepository";
 import { useUiStore } from "@/stores/uiStore";
-import type { ClassReport, ExamCodeReport, QuestionReport } from "@/data/types";
+import type { ClassReport, ExamCodeReport, QuestionReport, StudentJourney, NarratedLine, StudentCycle } from "@/data/types";
+import { KY_LABEL } from "@/data/types";
 import type { ExportScope } from "@/lib/export/exportService";
 import { diem, int, pct } from "@/lib/format";
 
@@ -38,6 +39,36 @@ function Page({ children, footer }: { children: ReactNode; footer?: string }) {
 
 function H({ children }: { children: ReactNode }) {
   return <div style={{ fontSize: 15, fontWeight: 700, color: NAVY, margin: "18px 0 10px" }}>{children}</div>;
+}
+
+function NarratorLine({ line }: { line: NarratedLine }) {
+  return (
+    <div style={{ border: `1px solid ${LINE}`, borderRadius: 10, padding: "10px 12px", background: "#F1F5F9" }}>
+      <div style={{ fontSize: 12.5, lineHeight: 1.55, color: INK }}>{line.text}</div>
+      {line.figures.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 6 }}>
+          {line.figures.map((f, i) => (
+            <span key={i} style={{ fontSize: 11, color: MUTED }}>
+              {f.label}: <b style={{ color: NAVY }}>{f.value}</b>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CycleHead({ label, range, status }: { label: string; range: { from: string; to: string }; status: string }) {
+  const tag = status === "upcoming" ? "Sắp tới" : status === "current" ? "Đang diễn ra" : "Đã qua";
+  const col = status === "upcoming" ? "#FFA23A" : status === "current" ? BRAND : MUTED;
+  return (
+    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6 }}>
+      <div style={{ fontSize: 16, fontWeight: 700, color: NAVY }}>{label}</div>
+      <div style={{ fontSize: 11, color: col, fontWeight: 600 }}>
+        {tag} · {range.from} → {range.to}
+      </div>
+    </div>
+  );
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
@@ -237,6 +268,88 @@ function ClassPages({ r }: { r: ClassReport }) {
   );
 }
 
+function StudentCyclePage({ c, idx }: { c: StudentCycle; idx: number }) {
+  return (
+    <Page footer={`Chặng ${idx}: ${c.label}`}>
+      <CycleHead label={c.label} range={c.range} status={c.status} />
+
+      <H>Trên lớp</H>
+      <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+        <Stat label="Chuyên cần" value={pct(c.lop.attendanceRate)} />
+        <Stat label="Đúng quiz TB" value={pct(c.lop.quizAccuracyAvg)} />
+        <Stat label="Số buổi" value={int(c.lop.sessions.length)} />
+      </div>
+      <NarratorLine line={c.lop.narration} />
+
+      <H>Ở nhà</H>
+      <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+        <Stat label="Hoàn thành" value={pct(c.nha.completionRate)} />
+        <Stat label="Đúng hạn" value={pct(c.nha.onTimeRate)} />
+        <Stat label="Điểm TB" value={c.nha.avgScore == null ? "—" : diem(c.nha.avgScore)} />
+      </div>
+      <NarratorLine line={c.nha.narration} />
+
+      {c.exam && (
+        <>
+          <H>Bài kiểm tra cuối chặng</H>
+          <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+            <Stat label="Điểm của em" value={diem(c.exam.score)} />
+            <Stat label="TB lớp" value={diem(c.exam.classAvg)} />
+            <Stat label="Mốc" value={c.exam.term} />
+          </div>
+          <NarratorLine line={c.exam.narration} />
+        </>
+      )}
+    </Page>
+  );
+}
+
+function StudentJourneyPages({ j }: { j: StudentJourney }) {
+  return (
+    <>
+      <Page footer="Mở đầu">
+        <H>Mở đầu</H>
+        <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+          <Stat label="Chỉ số học tập" value={`${j.overview.learningIndex.total}/100`} />
+          <Stat label="Chỉ số nỗ lực" value={`${j.overview.effortIndex.total}/100`} />
+          <Stat label="Hạng trong lớp" value={`${j.overview.rank}/${j.overview.classSize}`} />
+        </div>
+        <NarratorLine line={j.overview.narration} />
+
+        <H>Chuẩn bị</H>
+        <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+          <Stat label="Xem trước" value={`${j.prep.surface.xemTruoc.count}/${j.prep.surface.xemTruoc.total}`} />
+          <Stat label="Bài chuẩn bị" value={`${j.prep.surface.baiChuanBi.count}/${j.prep.surface.baiChuanBi.total}`} />
+          <Stat label="Đúng giờ" value={`${j.prep.surface.dungGio.count}/${j.prep.surface.dungGio.total}`} />
+        </div>
+        <NarratorLine line={j.prep.narration} />
+      </Page>
+
+      {j.cycles.map((c, i) => (
+        <StudentCyclePage key={c.id} c={c} idx={i + 1} />
+      ))}
+
+      <Page footer="Hội tụ">
+        <H>Hội tụ</H>
+        <NarratorLine line={j.convergence.narration} />
+        <H>Chủ đề cần củng cố</H>
+        <Bars
+          rows={j.convergence.topics.map((t) => ({
+            label: t.topic,
+            pct: Math.round(t.accuracyAvg * 100),
+            color: rate(t.accuracyAvg),
+          }))}
+        />
+        {j.convergence.nextExam && (
+          <div style={{ marginTop: 12, fontSize: 12.5, color: MUTED }}>
+            Mốc tiếp theo: <b style={{ color: NAVY }}>{j.convergence.nextExam.title}</b> · {j.convergence.nextExam.date}
+          </div>
+        )}
+      </Page>
+    </>
+  );
+}
+
 export function ReportDocument({ scope }: { scope: ExportScope }) {
   if (scope.kind === "lop") {
     const r = repo.getClassReport(scope.id);
@@ -250,26 +363,16 @@ export function ReportDocument({ scope }: { scope: ExportScope }) {
   }
 
   if (scope.kind === "hoc-sinh") {
-    const p = repo.getStudentProfile(scope.id);
+    const j = repo.getStudentJourney(scope.id, "ca-nam", "Địa lí");
     return (
       <>
-        <Cover title={p.student.name} subtitle={`${p.className} · ${p.schoolName}`} term="Hồ sơ học tập · 2025–2026" ring={p.learningIndex.total} />
-        <Page footer="Hồ sơ học sinh">
-          <H>Tổng quan</H>
-          <div style={{ display: "flex", gap: 10 }}>
-            <Stat label="Chỉ số học tập" value={`${p.learningIndex.total}/100`} />
-            <Stat label="Chỉ số nỗ lực" value={`${p.effortIndex.total}/100`} />
-            <Stat label="Hạng trong lớp" value={`${p.rank}/${p.classSize}`} />
-          </div>
-          <H>Điểm Địa lí qua các kì</H>
-          <Bars rows={p.exams.map((e) => ({ label: `${e.term} (TB lớp ${diem(e.classAvg)})`, pct: Math.round((e.score / 10) * 100), color: rate(e.score / 10) }))} />
-          <H>Chủ đề làm tốt</H>
-          <div style={{ fontSize: 13 }}>{p.strongTopics.join(", ")}</div>
-          <H>Chủ đề cần hỗ trợ</H>
-          <div style={{ fontSize: 13 }}>{p.weakTopics.map((t) => t.topic).join(", ")}</div>
-          <H>Nhận xét</H>
-          <div style={{ fontSize: 13, lineHeight: 1.7 }}>{p.teacherDraftNote}</div>
-        </Page>
+        <Cover
+          title={j.student.name}
+          subtitle={`${j.className} · ${j.schoolName}`}
+          term={`Hành trình ${KY_LABEL["ca-nam"]} · môn ${j.slice.subject} · 2025–2026`}
+          ring={j.overview.learningIndex.total}
+        />
+        <StudentJourneyPages j={j} />
       </>
     );
   }
