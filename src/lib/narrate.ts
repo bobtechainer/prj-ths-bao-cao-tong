@@ -20,7 +20,12 @@ export function narrateStudentOverview(j: {
   learningIndex: IndexBreakdown;
   effortIndex: IndexBreakdown;
 }): NarratedLine {
-  const text = `Em đang xếp hạng ${j.rank}/${j.classSize} trong lớp và ${TREND_WORD[j.trend]}. Chỉ số học tập ${j.learningIndex.total}, nỗ lực ${j.effortIndex.total} — nhìn chung là một quá trình đều tay.`;
+  const trendTail: Record<"up" | "flat" | "down", string> = {
+    up: "đang đi lên",
+    flat: "khá đều",
+    down: "có phần chững lại",
+  };
+  const text = `Em đang xếp hạng ${j.rank}/${j.classSize} trong lớp và ${TREND_WORD[j.trend]}. Chỉ số học tập ${j.learningIndex.total}, nỗ lực ${j.effortIndex.total} — nhịp học ${trendTail[j.trend]}.`;
   return line(text, [
     { label: "Hạng", value: `${int(j.rank)}/${int(j.classSize)}` },
     { label: "Học tập", value: int(j.learningIndex.total) },
@@ -89,7 +94,10 @@ export function narrateExam(
   gentle: boolean
 ): NarratedLine {
   const delta = exam.score - exam.classAvg;
-  const verb = status === "upcoming" ? "sẽ làm" : "đã làm";
+  const verb =
+    status === "upcoming" ? "sẽ làm" :
+    status === "current"  ? "đang làm" :
+    "đã làm";
   const cmp =
     delta >= 0.3 ? "nhỉnh hơn mặt bằng lớp" : delta <= -0.3 ? "thấp hơn mặt bằng lớp một chút" : "ngang mặt bằng lớp";
   const tail = gentle ? "Cứ giữ nhịp này nhé." : "";
@@ -106,8 +114,15 @@ export function narrateClassExam(
   report: { avg: number; median: number; numStudents: number; title: string },
   status: EventStatus
 ): NarratedLine {
-  const verb = status === "upcoming" ? "Sắp tới" : "Ở";
-  const text = `${verb} ${report.title}: điểm TB ${diem(report.avg)} · trung vị ${diem(report.median)} · ${int(report.numStudents)} bài. Phần lệch giữa trung bình và trung vị cho thấy nhóm điểm thấp đang kéo mặt bằng xuống.`;
+  const verb =
+    status === "upcoming" ? "Sắp tới" :
+    status === "current"  ? "Đang diễn ra —" :
+    "Ở";
+  const skewTail =
+    report.avg < report.median - 0.2 ? " Nhóm điểm thấp đang kéo mặt bằng xuống." :
+    report.avg > report.median + 0.2 ? " Nhóm điểm cao đang kéo mặt bằng lên." :
+    "";
+  const text = `${verb} ${report.title}: điểm TB ${diem(report.avg)} · trung vị ${diem(report.median)} · ${int(report.numStudents)} bài.${skewTail}`;
   return line(text, [
     { label: "Điểm TB", value: diem(report.avg) },
     { label: "Trung vị", value: diem(report.median) },

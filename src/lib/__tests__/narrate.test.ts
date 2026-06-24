@@ -58,6 +58,18 @@ describe("narrate — ĐÚNG THÌ", () => {
   });
 });
 
+describe("narrate — current status present tense (I2)", () => {
+  it("narrateExam status='current' chứa 'đang làm', KHÔNG chứa 'đã làm'", () => {
+    const line = narrateExam({ score: 7, classAvg: 7.2, term: "Đề cương" }, "current", true);
+    expect(line.text).toContain("đang làm");
+    expect(line.text).not.toContain("đã làm");
+  });
+  it("narrateClassExam status='current' chứa 'Đang diễn ra'", () => {
+    const line = narrateClassExam({ avg: 7.1, median: 7.0, numStudents: 42, title: "Kiểm tra giữa kỳ" }, "current");
+    expect(line.text).toContain("Đang diễn ra");
+  });
+});
+
 describe("narrateClassExam — không so avg với chính nó", () => {
   it("dùng trung vị + N, không có cụm 'so với trung bình'", () => {
     const line = narrateClassExam({ avg: 7.1, median: 7.0, numStudents: 108, title: "Thi thử THPT môn Địa lí" }, "past");
