@@ -1,11 +1,12 @@
 import type { ReportRepository } from "./repository";
-import type { ClassReport, ExamPaper, MissionDetail, SchoolReport, StudentProfile } from "./types";
+import type { ClassJourney, ClassReport, ExamPaper, Ky, MissionDetail, SchoolReport, StudentJourney, StudentProfile, Subject } from "./types";
 import { getWorld, getHongTeaching, CLASS_HERO, DIA_TOPICS } from "./mock/world";
 import { ACCOUNTS } from "./mock/accounts";
 import { buildClassReport, buildPhong, buildSchoolReport, buildStudentProfile } from "./mock/builders";
 import {
   buildExamPaper, buildExamSubmission, buildMissionDetail, buildMissionSubmission,
 } from "./mock/questions";
+import { buildStudentJourney, buildClassJourney } from "./mock/journey";
 import { Rng } from "@/lib/random";
 
 const classCache = new Map<string, ClassReport>();
@@ -13,6 +14,8 @@ const schoolCache = new Map<string, SchoolReport>();
 const studentCache = new Map<string, StudentProfile>();
 const paperCache = new Map<string, ExamPaper>();
 const missionCache = new Map<string, MissionDetail>();
+const studentJourneyCache = new Map<string, StudentJourney>();
+const classJourneyCache = new Map<string, ClassJourney>();
 
 function classIdOfExam(examId: string): string {
   return examId.startsWith("exam-") ? examId.slice(5) : CLASS_HERO;
@@ -52,6 +55,17 @@ export const mockRepository: ReportRepository = {
   getClassReport,
   getStudentProfile,
   getTeaching: () => getHongTeaching(),
+
+  getStudentJourney: (studentId: string, term: Ky, subject: Subject) => {
+    const key = `${studentId}|${term}|${subject}`;
+    if (!studentJourneyCache.has(key)) studentJourneyCache.set(key, buildStudentJourney(studentId, term, subject));
+    return studentJourneyCache.get(key)!;
+  },
+  getClassJourney: (classId: string, term: Ky, subject: Subject) => {
+    const key = `${classId}|${term}|${subject}`;
+    if (!classJourneyCache.has(key)) classJourneyCache.set(key, buildClassJourney(classId, term, subject));
+    return classJourneyCache.get(key)!;
+  },
 
   getExamPaper: (examId) => {
     if (!paperCache.has(examId)) paperCache.set(examId, buildExamPaper(getClassReport(classIdOfExam(examId)).thi));
