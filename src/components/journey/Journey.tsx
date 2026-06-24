@@ -62,7 +62,7 @@ export function Journey({
         <div
           className={cn(
             "h-[calc(100dvh-8rem)] overflow-y-auto space-y-8 pr-1",
-            !reduced && "snap-y snap-mandatory"
+            !reduced && "md:snap-y md:snap-mandatory"
           )}
         >
           {chapters.map((c) => (
