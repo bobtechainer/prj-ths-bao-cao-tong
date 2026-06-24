@@ -8,7 +8,7 @@ import { useUiStore } from "@/stores/uiStore";
 useUiStore.setState({ reducedMotion: true });
 
 describe("Phong — tóm tắt Trợ lý", () => {
-  test("hiện block Trợ lý tổng hợp với figure phần trăm", () => {
+  test("hiện block Trợ lý tóm tắt với figure phần trăm", () => {
     render(
       <MemoryRouter>
         <TooltipProvider>
@@ -16,8 +16,8 @@ describe("Phong — tóm tắt Trợ lý", () => {
         </TooltipProvider>
       </MemoryRouter>
     );
-    expect(screen.getByText("Trợ lý tổng hợp")).toBeInTheDocument();
-    // có ít nhất một figure tỉ lệ hoàn thành nhiệm vụ
-    expect(screen.getByText("Hoàn thành NV")).toBeInTheDocument();
+    expect(screen.getByText("Trợ lý tóm tắt")).toBeInTheDocument();
+    // có ít nhất một figure tỉ lệ hoàn thành nhiệm vụ (từ TroLy block)
+    expect(screen.getByText("Tỉ lệ HT NV")).toBeInTheDocument();
   });
 });

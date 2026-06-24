@@ -80,7 +80,7 @@ export default function Phong() {
         highlights={highlights}
       />
 
-      <TroLySummary lines={troLyLines} title="Trợ lý tổng hợp" />
+      <TroLySummary lines={troLyLines} />
 
       <Reveal>
         <ChartCard
@@ -108,7 +108,7 @@ export default function Phong() {
                 <thead>
                   <tr className="border-b text-muted-foreground">
                     <th className="px-2 py-2 text-left font-medium">Trường</th>
-                    <th className="px-2 py-2 text-right font-medium">Hoàn thành</th>
+                    <th className="px-2 py-2 text-right font-medium">Hoàn thành NV</th>
                     <th className="px-2 py-2 text-right font-medium">Cần hỗ trợ</th>
                     <th className="w-8" aria-hidden />
                   </tr>
