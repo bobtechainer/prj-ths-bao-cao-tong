@@ -1,7 +1,8 @@
 import type {
   ClassReport, ClassRosterRow, EngagementPoint, ExamCodeReport, ExamReport, HomeReport,
-  MissionReportView, MissionStudentReportView, PhongOverview, PhongSchoolRow, QuestionReport,
-  SchoolReport, SessionAnalytics, Student, StudentProfile, Subject, TopicAccuracy, WeakTopic,
+  Ky, MissionReportView, MissionStudentReportView, PhongOverview, PhongSchoolRow, PrepSurface,
+  QuestionReport, SchoolReport, SessionAnalytics, Student, StudentProfile, Subject, TopicAccuracy,
+  WeakTopic,
 } from "@/data/types";
 import { SUBJECTS } from "@/data/types";
 import { mean, median, toBands, histogram, normalize } from "@/lib/metrics";
@@ -9,7 +10,7 @@ import { learningIndex, effortIndex, convergeWeakTopics } from "@/lib/indices";
 import { examInsights } from "@/lib/insights";
 import { Rng } from "@/lib/random";
 import {
-  getWorld, CLASS_HERO, SCHOOL_HERO, DIA_TOPICS,
+  getWorld, CLASS_HERO, SCHOOL_HERO, DIA_TOPICS, cycleDate, KY_RANGE,
 } from "./world";
 import {
   REAL_STUDENTS, REAL_CODE1, REAL_CODE2, REAL_MISSED_1, REAL_MISSED_2, REAL_HIST_TOTAL,
@@ -626,3 +627,110 @@ function buildTeacherNote(name: string, strong: string[], weak: string[], exam: 
   else parts.push("Nếu giữ nhịp học đều, em có thể tiến bộ tiếp ở đợt sau.");
   return parts.join(" ");
 }
+
+// ---- Gắn ngày & trải Kỳ cho hành trình học sinh ----
+export interface DatedExam {
+  term: string;
+  subject: Subject;
+  score: number;
+  classAvg: number;
+  date: string;
+}
+export interface DatedSession {
+  session: string;
+  attendance: number;
+  quizAccuracy: number;
+  date: string;
+}
+
+/** Chọn Kỳ cho phần tử thứ i của danh sách dài n khi đang ở lát "ca-nam":
+ *  nửa đầu → Kỳ 1, nửa sau → Kỳ 2. Khi lát là một Kỳ cụ thể thì giữ nguyên Kỳ đó. */
+function kyOfIndex(term: Ky, i: number, n: number): Ky {
+  if (term !== "ca-nam") return term;
+  return i < Math.ceil(n / 2) ? "ky-1" : "ky-2";
+}
+
+/** idx cục bộ trong Kỳ + tổng phần tử của Kỳ đó (để cycleDate trải đều). */
+function localSpread(term: Ky, i: number, n: number): { ky: Ky; idx: number; total: number } {
+  if (term !== "ca-nam") return { ky: term, idx: i, total: n };
+  const firstN = Math.ceil(n / 2);
+  return i < firstN
+    ? { ky: "ky-1", idx: i, total: firstN }
+    : { ky: "ky-2", idx: i - firstN, total: n - firstN };
+}
+
+export function studentExamsForKy(studentId: string, term: Ky): DatedExam[] {
+  const profile = buildStudentProfile(studentId);
+  const n = profile.exams.length;
+  return profile.exams
+    .filter((_, i) => term === "ca-nam" || kyOfIndex(term, i, n) === term)
+    .map((e) => {
+      const i = profile.exams.indexOf(e);
+      const sp = localSpread(term, i, n);
+      return { ...e, date: cycleDate(sp.ky, sp.idx, sp.total) };
+    })
+    .sort((a, b) => (a.date < b.date ? -1 : 1));
+}
+
+export function studentSessionsForKy(studentId: string, term: Ky): DatedSession[] {
+  const profile = buildStudentProfile(studentId);
+  const n = profile.classHistory.length;
+  return profile.classHistory
+    .filter((_, i) => term === "ca-nam" || kyOfIndex(term, i, n) === term)
+    .map((s) => {
+      const i = profile.classHistory.indexOf(s);
+      const sp = localSpread(term, i, n);
+      return { ...s, date: cycleDate(sp.ky, sp.idx, sp.total) };
+    })
+    .sort((a, b) => (a.date < b.date ? -1 : 1));
+}
+
+export function missionDate(studentId: string, term: Ky, i: number, n: number): string {
+  void studentId;
+  const sp = localSpread(term, i, n);
+  return cycleDate(sp.ky, sp.idx, Math.max(sp.total, 1));
+}
+
+export function studentMissionsForKy(studentId: string, term: Ky): MissionStudentReportView[] {
+  const profile = buildStudentProfile(studentId);
+  const n = profile.missions.length;
+  return profile.missions.filter((_, i) => term === "ca-nam" || kyOfIndex(term, i, n) === term);
+}
+
+// ---- PrepSurface (SỐ THÔ: đếm buổi/lượt, không phải chỉ số tổng hợp) ----
+export function buildStudentPrepSurface(studentId: string, term: Ky): PrepSurface {
+  const sessions = studentSessionsForKy(studentId, term);
+  const missions = studentMissionsForKy(studentId, term);
+  const submitted = missions.filter((m) => m.status === "graded" || m.status === "submitted");
+  const totalSessions = sessions.length || 1;
+  // "xem trước": đếm buổi có mặt (proxy số thô cho việc chuẩn bị trước buổi học)
+  const xemTruocCount = sessions.filter((s) => s.attendance > 0).length;
+  // "bài chuẩn bị": số nhiệm vụ đã nộp / tổng nhiệm vụ
+  const baiCount = submitted.length;
+  // "đúng giờ": số nhiệm vụ nộp đúng hạn / tổng nhiệm vụ
+  const dungGioCount = missions.filter((m) => !m.late).length;
+  return {
+    xemTruoc: { count: xemTruocCount, total: totalSessions },
+    baiChuanBi: { count: baiCount, total: missions.length || 1 },
+    dungGio: { count: dungGioCount, total: missions.length || 1 },
+  };
+}
+
+export function buildClassPrepSurface(classId: string, term: Ky): PrepSurface {
+  const report = buildClassReport(classId);
+  const roster = report.roster;
+  const total = roster.length || 1;
+  // số thô cấp lớp: đếm số HS đạt mốc chuẩn bị, không trung bình hoá.
+  const xemTruoc = roster.filter((r) => r.attendance >= 0.9).length;
+  const onTime = report.nha.students.filter((s) => !s.late).length;
+  const submitted = report.nha.students.filter((s) => s.status === "graded" || s.status === "submitted").length;
+  void term; // PrepSurface lớp lấy ảnh chụp lớp; lát Kỳ chỉ đổi narration ở tầng assembler.
+  return {
+    xemTruoc: { count: xemTruoc, total },
+    baiChuanBi: { count: submitted, total: report.nha.students.length || 1 },
+    dungGio: { count: onTime, total: report.nha.students.length || 1 },
+  };
+}
+
+// Suppress unused import warning for KY_RANGE (used in missionDate via localSpread/cycleDate)
+void KY_RANGE;
