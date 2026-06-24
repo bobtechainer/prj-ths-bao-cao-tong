@@ -1,4 +1,4 @@
-import type { Khoi, Klass, School, Student, Teaching } from "@/data/types";
+import type { Khoi, Klass, Ky, School, Student, Teaching, UpcomingExam } from "@/data/types";
 import { Rng } from "@/lib/random";
 import { HO, DEM_NAM, DEM_NU, TEN_NAM, TEN_NU, SCHOOL_NAMES } from "./names";
 import { REAL_STUDENTS, type RealStudent } from "./sontay.real";
@@ -135,4 +135,43 @@ export function getHongTeaching(): Teaching {
     .filter((c) => c.schoolId === SCHOOL_HERO && c.id !== CLASS_HERO)
     .map((c) => c.id);
   return { teacherName: "Nguyễn Minh Hồng", subject: "Địa lí", homeroomClassId: CLASS_HERO, subjectClassIds };
+}
+
+// ---- Mốc thời gian cho hành trình ----
+/** Mốc "bây giờ" của bản trình bày: sau thi thử (cuối Kỳ 2), trước kỳ thi THPT chính thức. */
+export const DEMO_NOW = "2026-06-10";
+
+/** Kỳ thi THPT chính thức — mốc tương lai, KHÔNG có kết quả. */
+export const OFFICIAL_EXAM: UpcomingExam = { title: "Kỳ thi THPT chính thức", date: "2026-06-26" };
+
+/** Khoảng thời gian mỗi Kỳ (ISO). Thi thử thật rơi vào cuối Kỳ 2. */
+export const KY_RANGE: Record<Ky, { from: string; to: string }> = {
+  "ky-1": { from: "2025-09-05", to: "2026-01-10" },
+  "ky-2": { from: "2026-01-20", to: "2026-06-05" },
+  "ca-nam": { from: "2025-09-05", to: "2026-06-05" },
+};
+
+/**
+ * Mốc kiểm tra cắt chặng (cuối mỗi chặng = một bài kiểm tra/kỳ thi).
+ * Mỗi Kỳ có 2 mốc; chặng = quãng giữa hai mốc liền nhau, chặng cuối khép bằng mốc cuối.
+ */
+export const KY_BOUNDARIES: Record<Ky, string[]> = {
+  "ky-1": ["2025-10-20", "2026-01-08"],
+  "ky-2": ["2026-03-15", "2026-06-04"],
+  "ca-nam": ["2025-10-20", "2026-01-08", "2026-03-15", "2026-06-04"],
+};
+
+/**
+ * Sinh ISO ngày của sự kiện thứ `idx` trong tổng `total` sự kiện của một Kỳ.
+ * Trải đều trong KY_RANGE[ky], tăng dần theo idx, deterministic.
+ */
+export function cycleDate(ky: Ky, idx: number, total: number): string {
+  const range = KY_RANGE[ky];
+  const from = new Date(range.from + "T00:00:00Z").getTime();
+  const to = new Date(range.to + "T00:00:00Z").getTime();
+  const span = to - from;
+  const denom = total > 1 ? total - 1 : 1;
+  // chừa 5% mép đầu để sự kiện đầu nằm SAU from (không trùng mép), cuối chạm gần to.
+  const t = from + span * (0.05 + 0.9 * (idx / denom));
+  return new Date(t).toISOString().slice(0, 10);
 }
