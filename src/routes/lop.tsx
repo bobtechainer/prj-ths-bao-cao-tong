@@ -1,55 +1,84 @@
-import { useParams, useSearchParams } from "react-router-dom";
+import { useCallback } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import type { Ky, Subject } from "@/data/types";
 import { mockRepository as repo } from "@/data/mockRepository";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/report/PageHeader";
 import { ExportButton } from "@/components/report/ExportButton";
-import { TongHopTab } from "./lop/TongHopTab";
-import { LopTab } from "./lop/LopTab";
-import { NhaTab } from "./lop/NhaTab";
-import { ThiTab } from "./lop/ThiTab";
+import { Journey } from "@/components/journey/Journey";
+import { ClassPicker } from "@/components/journey/ClassPicker";
+import { buildClassChapters } from "@/components/journey/classChapters";
 
-const TABS = [
-  { key: "tong-hop", label: "Tổng hợp" },
-  { key: "lop", label: "Học tại lớp" },
-  { key: "nha", label: "Học tại nhà" },
-  { key: "thi", label: "Qua các kì thi" },
-];
+function parseKy(raw: string | null): Ky {
+  return raw === "ky-2" || raw === "ca-nam" ? raw : "ky-1";
+}
 
 export default function Lop() {
   const { classId = "" } = useParams();
+  const navigate = useNavigate();
   const [sp, setSp] = useSearchParams();
-  const tab = sp.get("tab") ?? "tong-hop";
-  const report = repo.getClassReport(classId);
+
+  // ?class= ghi đè :classId nếu có (giữ đồng bộ khi đổi lớp).
+  const activeClassId = sp.get("class") ?? classId;
+  const term = parseKy(sp.get("ky"));
+  const subject = (sp.get("mon") as Subject) ?? "Địa lí";
+  const present = sp.get("present") === "1";
+
+  const journey = repo.getClassJourney(activeClassId, term, subject);
+  const klass = repo.getClass(activeClassId);
+
+  const chapters = buildClassChapters(journey, (to) => {
+    // giữ Kỳ + Môn khi drill xuống học sinh
+    const q = new URLSearchParams();
+    q.set("ky", term);
+    q.set("mon", subject);
+    navigate(`${to}?${q.toString()}`);
+  });
+
+  const timeline = chapters.map((c) => ({
+    id: c.id,
+    label: c.title,
+    status: c.status ?? ("past" as const),
+  }));
+
+  const updateQuery = useCallback(
+    (next: Record<string, string>) => {
+      const q = new URLSearchParams(sp);
+      for (const [k, v] of Object.entries(next)) q.set(k, v);
+      setSp(q, { replace: false });
+      window.scrollTo({ top: 0, behavior: "auto" });
+    },
+    [sp, setSp]
+  );
 
   return (
     <div className="space-y-5">
       <PageHeader
-        title={`Lớp ${report.klass.name}`}
-        subtitle={`GV chủ nhiệm ${report.klass.homeroomTeacher} · ${report.students.length} học sinh`}
-        right={<ExportButton scope={{ kind: "lop", id: classId, title: `Báo cáo lớp ${report.klass.name}` }} />}
+        title={`Lớp ${klass ? klass.name : ""}`}
+        subtitle={
+          klass
+            ? `GV chủ nhiệm ${klass.homeroomTeacher} · ${journey.overview.numStudents} học sinh`
+            : undefined
+        }
+        right={
+          <ExportButton
+            scope={{ kind: "lop", id: activeClassId, title: `Báo cáo lớp ${klass ? klass.name : ""}` }}
+          />
+        }
       />
 
-      <Tabs value={tab} onValueChange={(v) => setSp({ tab: v })}>
-        <TabsList>
-          {TABS.map((t) => (
-            <TabsTrigger key={t.key} value={t.key}>
-              {t.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-        <TabsContent value="tong-hop" className="pt-2">
-          <TongHopTab report={report} />
-        </TabsContent>
-        <TabsContent value="lop" className="pt-2">
-          <LopTab report={report} />
-        </TabsContent>
-        <TabsContent value="nha" className="pt-2">
-          <NhaTab report={report} />
-        </TabsContent>
-        <TabsContent value="thi" className="pt-2">
-          <ThiTab report={report} />
-        </TabsContent>
-      </Tabs>
+      <ClassPicker
+        selectedId={activeClassId}
+        onSelect={(id) => updateQuery({ class: id })}
+      />
+
+      <Journey
+        slice={{ term, subject }}
+        availableSlices={journey.availableSlices}
+        onSlice={(s) => updateQuery({ ky: s.term, mon: s.subject })}
+        timeline={timeline}
+        chapters={chapters}
+        initialPresent={present}
+      />
     </div>
   );
 }
