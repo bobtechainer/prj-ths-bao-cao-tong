@@ -464,6 +464,7 @@ export interface ClassJourney {
   now: string;
   klass: Klass;
   schoolName: string;
+  roster: ClassRosterRow[];
   overview: {
     numStudents: number;
     examAvg: number;

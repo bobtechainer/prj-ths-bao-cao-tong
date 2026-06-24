@@ -223,6 +223,7 @@ export function buildClassJourney(classId: string, term: Ky, subject: Subject): 
     now,
     klass: report.klass,
     schoolName: getWorld().schoolById.get(report.klass.schoolId)?.name ?? "",
+    roster: report.roster,
     overview: {
       numStudents: report.students.length,
       examAvg,

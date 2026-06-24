@@ -64,7 +64,7 @@ function buildCycleChapter(c: ClassCycle): ChapterDef {
   ];
 
   return {
-    id: `chang-${c.id}`,
+    id: `cycle-${c.id}`,
     title: c.label,
     status: c.status,
     render: () => (
@@ -259,15 +259,16 @@ export function buildClassChapters(j: ClassJourney, nav: (to: string) => void): 
           help="Mỗi chấm là một học sinh: trục ngang là mức nỗ lực, trục dọc là kết quả học tập. Đường chéo là mốc cân bằng."
         >
           <EffortScatter
-            data={convergence.needSupport.map((r) => ({ name: r.name, effort: r.effort, result: r.learning }))}
+            data={j.roster.map((r) => ({ name: r.name, effort: r.effort, result: r.learning }))}
           />
         </ChartCard>
         <ChartCard
-          title="Danh sách học sinh cả lớp"
+          title="Danh sách học sinh"
           help="Bấm vào một học sinh để mở hành trình học tập của em (giữ nguyên Kỳ và Môn đang chọn)."
         >
+          <p className="mb-2 text-sm text-muted-foreground">Cần hỗ trợ: {convergence.needSupport.length}</p>
           <RosterTable
-            rows={convergence.needSupport}
+            rows={j.roster}
             onRowClick={(id) =>
               nav(
                 `/app/hoc-sinh/${id}?ky=${j.slice.term}&mon=${encodeURIComponent(j.slice.subject)}`
