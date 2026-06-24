@@ -10,7 +10,7 @@ import { learningIndex, effortIndex, convergeWeakTopics } from "@/lib/indices";
 import { examInsights } from "@/lib/insights";
 import { Rng } from "@/lib/random";
 import {
-  getWorld, CLASS_HERO, SCHOOL_HERO, DIA_TOPICS, cycleDate, KY_RANGE,
+  getWorld, CLASS_HERO, SCHOOL_HERO, DIA_TOPICS, cycleDate,
 } from "./world";
 import {
   REAL_STUDENTS, REAL_CODE1, REAL_CODE2, REAL_MISSED_1, REAL_MISSED_2, REAL_HIST_TOTAL,
@@ -663,9 +663,9 @@ export function studentExamsForKy(studentId: string, term: Ky): DatedExam[] {
   const profile = buildStudentProfile(studentId);
   const n = profile.exams.length;
   return profile.exams
-    .filter((_, i) => term === "ca-nam" || kyOfIndex(term, i, n) === term)
-    .map((e) => {
-      const i = profile.exams.indexOf(e);
+    .map((e, i) => ({ e, i }))
+    .filter(({ i }) => term === "ca-nam" || kyOfIndex(term, i, n) === term)
+    .map(({ e, i }) => {
       const sp = localSpread(term, i, n);
       return { ...e, date: cycleDate(sp.ky, sp.idx, sp.total) };
     })
@@ -676,9 +676,9 @@ export function studentSessionsForKy(studentId: string, term: Ky): DatedSession[
   const profile = buildStudentProfile(studentId);
   const n = profile.classHistory.length;
   return profile.classHistory
-    .filter((_, i) => term === "ca-nam" || kyOfIndex(term, i, n) === term)
-    .map((s) => {
-      const i = profile.classHistory.indexOf(s);
+    .map((s, i) => ({ s, i }))
+    .filter(({ i }) => term === "ca-nam" || kyOfIndex(term, i, n) === term)
+    .map(({ s, i }) => {
       const sp = localSpread(term, i, n);
       return { ...s, date: cycleDate(sp.ky, sp.idx, sp.total) };
     })
@@ -732,5 +732,3 @@ export function buildClassPrepSurface(classId: string, term: Ky): PrepSurface {
   };
 }
 
-// Suppress unused import warning for KY_RANGE (used in missionDate via localSpread/cycleDate)
-void KY_RANGE;
