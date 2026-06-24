@@ -362,3 +362,124 @@ export interface PhongSchoolRow {
   attendance: number; // 0..1
   needSupportPct: number; // 0..1
 }
+
+// ---- Hành trình báo cáo (journey) ----
+export type Ky = "ky-1" | "ky-2" | "ca-nam";
+export const KY_LABEL: Record<Ky, string> = {
+  "ky-1": "Học kì 1",
+  "ky-2": "Học kì 2",
+  "ca-nam": "Cả năm",
+};
+
+export type EventStatus = "past" | "current" | "upcoming";
+
+export interface PrepSurface {
+  xemTruoc: { count: number; total: number };
+  baiChuanBi: { count: number; total: number };
+  dungGio: { count: number; total: number };
+}
+
+export interface NarratedLine {
+  text: string;
+  figures: { label: string; value: string }[];
+}
+
+/** Kỳ thi THPT chính thức (mốc tương lai, không có kết quả). */
+export interface UpcomingExam {
+  title: string;
+  date: string;
+}
+
+export interface CycleSession {
+  session: string;
+  date: string;
+  attendance: number;
+  quizAccuracy: number;
+}
+
+export interface StudentCycle {
+  id: string;
+  label: string;
+  range: { from: string; to: string };
+  status: EventStatus;
+  lop: {
+    sessions: CycleSession[];
+    attendanceRate: number;
+    quizAccuracyAvg: number;
+    narration: NarratedLine;
+  };
+  nha: {
+    missions: MissionStudentReportView[];
+    completionRate: number;
+    onTimeRate: number;
+    avgScore: number | null;
+    narration: NarratedLine;
+  };
+  exam: {
+    examId: string;
+    submissionKey: string;
+    term: string;
+    date: string;
+    score: number;
+    classAvg: number;
+    narration: NarratedLine;
+  } | null;
+}
+
+export interface StudentJourney {
+  kind: "student";
+  slice: { term: Ky; subject: Subject };
+  now: string;
+  student: Student;
+  className: string;
+  schoolName: string;
+  overview: {
+    rank: number;
+    classSize: number;
+    trend: "up" | "flat" | "down";
+    learningIndex: IndexBreakdown;
+    effortIndex: IndexBreakdown;
+    narration: NarratedLine;
+  };
+  prep: { surface: PrepSurface; narration: NarratedLine };
+  cycles: StudentCycle[];
+  convergence: { topics: WeakTopic[]; nextExam: UpcomingExam | null; narration: NarratedLine };
+  availableSlices: { terms: Ky[]; subjects: Subject[] };
+  empty: boolean;
+}
+
+export interface ClassCycle {
+  id: string;
+  label: string;
+  range: { from: string; to: string };
+  status: EventStatus;
+  lop: { session: SessionAnalytics; narration: NarratedLine };
+  nha: { report: HomeReport; completionRate: number; narration: NarratedLine };
+  exam: { report: ExamReport; narration: NarratedLine } | null;
+}
+
+export interface ClassJourney {
+  kind: "class";
+  slice: { term: Ky; subject: Subject };
+  now: string;
+  klass: Klass;
+  schoolName: string;
+  overview: {
+    numStudents: number;
+    examAvg: number;
+    learningIndex: IndexBreakdown;
+    effortIndex: IndexBreakdown;
+    needSupport: number;
+    narration: NarratedLine;
+  };
+  prep: { surface: PrepSurface; narration: NarratedLine };
+  cycles: ClassCycle[];
+  convergence: {
+    topics: WeakTopic[];
+    needSupport: ClassRosterRow[];
+    nextExam: UpcomingExam | null;
+    narration: NarratedLine;
+  };
+  availableSlices: { terms: Ky[]; subjects: Subject[] };
+  empty: boolean;
+}
