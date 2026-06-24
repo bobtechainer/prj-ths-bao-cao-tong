@@ -8,7 +8,9 @@ import { cn } from "@/lib/utils";
 import { Building2, Users, GraduationCap, Sigma, ClipboardList, HeartHandshake, ChevronRight } from "lucide-react";
 import { PageHeader } from "@/components/report/PageHeader";
 import { ExecutiveHero } from "@/components/report/ExecutiveHero";
+import { TroLySummary } from "@/components/report/TroLySummary";
 import { ExportButton } from "@/components/report/ExportButton";
+import type { NarratedLine } from "@/data/types";
 import { ChartCard } from "@/components/charts/chart-kit";
 import { ComparisonTable } from "@/components/report/ComparisonTable";
 import { TrendLine } from "@/components/charts/TrendLine";
@@ -40,6 +42,21 @@ export default function Phong() {
     `${needSchool.schoolName} đang có tỉ lệ học sinh cần hỗ trợ cao nhất (${pct(needSchool.needSupportPct)}). Phòng nên ghé sớm xem các em vướng ở môn nào.`,
   ];
 
+  const troLyLines: NarratedLine[] = [
+    {
+      text: `${bestSchool.schoolName} đang dẫn đầu toàn Phòng về kết quả thi.`,
+      figures: [{ label: "Điểm thi TB", value: diem(bestSchool.examAvg) }],
+    },
+    {
+      text: "Trung bình toàn ngành, học sinh đã nộp được phần lớn bài về nhà được giao.",
+      figures: [{ label: "Tỉ lệ HT NV", value: pct(o.kpis.completionRate) }],
+    },
+    {
+      text: `${needSchool.schoolName} có tỉ lệ học sinh cần hỗ trợ cao nhất — Phòng nên ghé sớm.`,
+      figures: [{ label: "Cần hỗ trợ", value: pct(needSchool.needSupportPct) }],
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -62,6 +79,8 @@ export default function Phong() {
         ]}
         highlights={highlights}
       />
+
+      <TroLySummary lines={troLyLines} title="Trợ lý tổng hợp" />
 
       <Reveal>
         <ChartCard
@@ -89,7 +108,7 @@ export default function Phong() {
                 <thead>
                   <tr className="border-b text-muted-foreground">
                     <th className="px-2 py-2 text-left font-medium">Trường</th>
-                    <th className="px-2 py-2 text-right font-medium">Hoàn thành NV</th>
+                    <th className="px-2 py-2 text-right font-medium">Hoàn thành</th>
                     <th className="px-2 py-2 text-right font-medium">Cần hỗ trợ</th>
                     <th className="w-8" aria-hidden />
                   </tr>
