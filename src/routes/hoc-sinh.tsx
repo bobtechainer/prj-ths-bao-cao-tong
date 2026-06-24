@@ -19,6 +19,7 @@ export default function HocSinh() {
 
   const term = parseKy(params.get("ky"));
   const monParam = params.get("mon") ?? "";
+  const present = params.get("present") === "1";
   const j = repo.getStudentJourney(studentId, term, (monParam || "Địa lí") as Subject);
 
   const onSlice = useCallback(
@@ -61,6 +62,7 @@ export default function HocSinh() {
         onSlice={onSlice}
         timeline={timeline}
         chapters={chapters}
+        initialPresent={present}
       />
     </div>
   );

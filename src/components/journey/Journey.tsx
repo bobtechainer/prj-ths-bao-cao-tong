@@ -18,15 +18,17 @@ export function Journey({
   onSlice,
   timeline,
   chapters,
+  initialPresent,
 }: {
   slice: { term: Ky; subject: Subject };
   availableSlices: { terms: Ky[]; subjects: Subject[] };
   onSlice: (s: { term: Ky; subject: Subject }) => void;
   timeline: { id: string; label: string; status: EventStatus }[];
   chapters: ChapterDef[];
+  initialPresent?: boolean;
 }): JSX.Element {
   const reduced = useReduced();
-  const [present, setPresent] = useState(false);
+  const [present, setPresent] = useState(!!initialPresent);
   const activeId = timeline.find((t) => t.status === "current")?.id ?? timeline[0]?.id;
 
   return (
