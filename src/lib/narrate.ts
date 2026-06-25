@@ -1,6 +1,6 @@
 import type {
   NarratedLine, PrepSurface, WeakTopic, UpcomingExam, EventStatus, IndexBreakdown,
-  StudentOverview,
+  StudentOverview, ClassOverview,
 } from "@/data/types";
 import { diem, pct, int } from "@/lib/format";
 
@@ -209,5 +209,39 @@ export function narrateOverviewHoiTu(ov: StudentOverview, nextExam: UpcomingExam
   if (nextExam) {
     figures.push({ label: nextExam.title, value: nextExam.date });
   }
+  return line(text, figures);
+}
+
+export function narrateClassOverviewMoDau(ov: ClassOverview): NarratedLine {
+  const text = `Lớp ${ov.klass.name} có ${int(ov.numStudents)} em, chuyên cần ${pct(ov.attendanceRate)}. Tính chung các môn, chỉ số học tập trung bình ${ov.overallLearningIndex}; mạnh nhất đang là ${ov.strongest.subject}.`;
+  return line(text, [
+    { label: "Sĩ số", value: int(ov.numStudents) },
+    { label: "Học tập TB", value: String(ov.overallLearningIndex) },
+    { label: "Cần hỗ trợ", value: int(ov.needSupport) },
+  ]);
+}
+
+export function narrateClassOverviewCacMon(ov: ClassOverview): NarratedLine {
+  const s = ov.strongest, w = ov.weakest;
+  const sPart = s.examAvg !== null ? ` ${diem(s.examAvg)}` : "";
+  const wPart = w.examAvg !== null ? ` ${diem(w.examAvg)}` : "";
+  const text = `Cả lớp nhỉnh nhất ở ${s.subject}${sPart}; còn ${w.subject}${wPart} là môn nên để ý kèm thêm trong kỳ này.`;
+  return line(text, [
+    { label: `Cao nhất · ${s.subject}`, value: s.examAvg !== null ? diem(s.examAvg) : "—" },
+    { label: `Cần để ý · ${w.subject}`, value: w.examAvg !== null ? diem(w.examAvg) : "—" },
+  ]);
+}
+
+export function narrateClassOverviewHoiTu(ov: ClassOverview, nextExam: UpcomingExam | null): NarratedLine {
+  const names = ov.weakest.weakTopics.filter((t) => t.confirmed).slice(0, 3).map((t) => t.topic).join(", ");
+  const action = nextExam
+    ? `nên ôn lại ${ov.weakest.subject} trước ${nextExam.title}`
+    : `nên dành thêm thời gian cho ${ov.weakest.subject}`;
+  const topicPart = names ? ` Mấy chủ đề lớp còn hay sai: ${names}.` : "";
+  const text = `Cả lớp ${action}.${topicPart}`;
+  const figures: { label: string; value: string }[] = [];
+  if (ov.weakest.examAvg !== null) figures.push({ label: `Cần để ý · ${ov.weakest.subject}`, value: diem(ov.weakest.examAvg) });
+  else figures.push({ label: "Cần để ý", value: ov.needSupport > 0 ? int(ov.needSupport) : "—" });
+  if (nextExam) figures.push({ label: nextExam.title, value: nextExam.date });
   return line(text, figures);
 }

@@ -516,6 +516,30 @@ export interface StudentOverview {
   availableSlices: { terms: Ky[]; subjects: string[] };
 }
 
+export interface ClassSubjectEntry {
+  subject: Subject;
+  examAvg: number | null;
+  learningIndex: number;
+  effortIndex: number;
+  weakTopics: WeakTopic[];
+}
+
+export interface ClassOverview {
+  kind: "class-overview";
+  slice: { term: Ky; subject: "Tất cả môn" };
+  now: string;
+  klass: Klass;
+  schoolName: string;
+  numStudents: number;
+  subjects: ClassSubjectEntry[];   // sorted strong→weak by examAvg (null last)
+  overallLearningIndex: number;
+  attendanceRate: number;          // chuyên cần toàn lớp (subject-agnostic, từ report thật)
+  needSupport: number;             // số em cần hỗ trợ (theo kết quả tổng hợp lớp)
+  strongest: ClassSubjectEntry;
+  weakest: ClassSubjectEntry;
+  availableSlices: { terms: Ky[]; subjects: string[] };
+}
+
 export interface ClassCycle {
   id: string;
   label: string;

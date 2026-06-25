@@ -1,7 +1,7 @@
 import type { ReportRepository } from "./repository";
 import type { ClassJourney, ClassReport, ExamPaper, Ky, MissionDetail, SchoolReport, StudentJourney, StudentProfile, Subject } from "./types";
 import { getWorld, getHongTeaching, getHongProfile, CLASS_HERO, DIA_TOPICS } from "./mock/world";
-import { getStudentOverview } from "./mock/overview";
+import { getStudentOverview, getClassOverview } from "./mock/overview";
 import { ACCOUNTS } from "./mock/accounts";
 import { buildClassReport, buildPhong, buildSchoolReport, buildStudentProfile } from "./mock/builders";
 import {
@@ -69,6 +69,7 @@ export const mockRepository: ReportRepository = {
     return classJourneyCache.get(key)!;
   },
   getStudentOverview: (studentId: string, term: Ky) => getStudentOverview(studentId, term),
+  getClassOverview: (classId: string, term: Ky) => getClassOverview(classId, term),
 
   getExamPaper: (examId) => {
     if (!paperCache.has(examId)) paperCache.set(examId, buildExamPaper(getClassReport(classIdOfExam(examId)).thi));
