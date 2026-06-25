@@ -17,6 +17,7 @@ export function ProgressRing({
   label,
   suffix = "",
   colorOverride,
+  hideValue = false,
   className,
 }: {
   value: number;
@@ -25,6 +26,8 @@ export function ProgressRing({
   label?: string;
   suffix?: string;
   colorOverride?: string;
+  /** Ẩn số ở giữa vòng tròn — hữu ích khi giá trị đã được trình bày ở nơi khác. */
+  hideValue?: boolean;
   className?: string;
 }) {
   const reduced = useReduced();
@@ -53,15 +56,22 @@ export function ProgressRing({
           transition={{ duration: reduced ? 0 : 1.1, ease: [0.22, 1, 0.36, 1] }}
         />
       </svg>
-      <div className="absolute inset-0 grid place-items-center text-center">
-        <div>
-          <div className="text-2xl font-semibold tabular-nums" style={{ color: col }}>
-            <CountUp value={value} />
-            {suffix}
+      {!hideValue && (
+        <div className="absolute inset-0 grid place-items-center text-center">
+          <div>
+            <div className="text-2xl font-semibold tabular-nums" style={{ color: col }}>
+              <CountUp value={value} />
+              {suffix}
+            </div>
+            {label && <div className="text-xs text-muted-foreground">{label}</div>}
           </div>
-          {label && <div className="text-xs text-muted-foreground">{label}</div>}
         </div>
-      </div>
+      )}
+      {hideValue && label && (
+        <div className="absolute inset-0 grid place-items-center text-center">
+          <div className="text-xs text-muted-foreground">{label}</div>
+        </div>
+      )}
     </div>
   );
 }
