@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
-import { Play } from "lucide-react";
 import type { Ky, SubjectFilter, EventStatus } from "@/data/types";
 import type { ChapterDef } from "./types-journey";
 import { KyMonPicker } from "./KyMonPicker";
 import { TimelineRail } from "./TimelineRail";
 import { Chapter } from "./Chapter";
-import { PresentationMode } from "./PresentationMode";
 
 export type { ChapterDef } from "./types-journey";
 
@@ -16,16 +14,13 @@ export function Journey({
   onSlice,
   timeline,
   chapters,
-  initialPresent,
 }: {
   slice: { term: Ky; subject: SubjectFilter };
   availableSlices: { terms: Ky[]; subjects: SubjectFilter[] };
   onSlice: (s: { term: Ky; subject: SubjectFilter }) => void;
   timeline: { id: string; label: string; status: EventStatus }[];
   chapters: ChapterDef[];
-  initialPresent?: boolean;
 }): JSX.Element {
-  const [present, setPresent] = useState(!!initialPresent);
   const [activeId, setActiveId] = useState<string | undefined>(timeline[0]?.id);
 
   // Scrollspy: observe each chapter section in the viewport (AppShell's <main> is root)
@@ -66,8 +61,8 @@ export function Journey({
 
   return (
     <div className="space-y-4">
-      {/* Sticky header: KyMonPicker + Trình chiếu button */}
-      <div className="sticky top-0 z-30 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card/95 px-3 py-2.5 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/80">
+      {/* Sticky header: bộ lọc Kỳ × Môn */}
+      <div className="sticky top-0 z-30 -mx-1 flex flex-wrap items-center gap-3 rounded-xl border bg-card/95 px-3 py-2.5 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <KyMonPicker
           term={slice.term}
           subject={slice.subject}
@@ -75,13 +70,6 @@ export function Journey({
           subjects={availableSlices.subjects}
           onChange={onSlice}
         />
-        <button
-          type="button"
-          onClick={() => setPresent(true)}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-brand-300 bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-700 shadow-sm transition-colors hover:bg-brand-100"
-        >
-          <Play className="size-3.5" /> Trình chiếu
-        </button>
       </div>
 
       {/* Main layout: sidebar rail + chapters flowing in the page (no nested scroller) */}
@@ -102,9 +90,6 @@ export function Journey({
           ))}
         </div>
       </div>
-
-      {/* Presentation overlay */}
-      <PresentationMode chapters={chapters} open={present} onClose={() => setPresent(false)} />
     </div>
   );
 }

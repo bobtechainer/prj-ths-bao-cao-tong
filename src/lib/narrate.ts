@@ -4,12 +4,6 @@ import type {
 } from "@/data/types";
 import { diem, pct, int } from "@/lib/format";
 
-const TREND_WORD: Record<"up" | "flat" | "down", string> = {
-  up: "đang đi lên",
-  flat: "giữ nhịp ổn định",
-  down: "đang chững lại",
-};
-
 function line(text: string, figures: { label: string; value: string }[]): NarratedLine {
   return { text, figures };
 }
@@ -22,11 +16,11 @@ export function narrateStudentOverview(j: {
   effortIndex: IndexBreakdown;
 }): NarratedLine {
   const trendTail: Record<"up" | "flat" | "down", string> = {
-    up: "đang đi lên",
-    flat: "khá đều",
-    down: "có phần chững lại",
+    up: "mấy chặng gần đây đang đi lên",
+    flat: "giữ khá đều",
+    down: "gần đây có phần chững lại",
   };
-  const text = `Em đang xếp hạng ${j.rank}/${j.classSize} trong lớp và ${TREND_WORD[j.trend]}. Chỉ số học tập ${j.learningIndex.total}, nỗ lực ${j.effortIndex.total} — nhịp học ${trendTail[j.trend]}.`;
+  const text = `Em đang đứng thứ ${j.rank}/${j.classSize} của lớp, ${trendTail[j.trend]}. Chỉ số học tập ${j.learningIndex.total}, nỗ lực ${j.effortIndex.total}.`;
   return line(text, [
     { label: "Hạng", value: `${int(j.rank)}/${int(j.classSize)}` },
     { label: "Học tập", value: int(j.learningIndex.total) },
@@ -51,7 +45,7 @@ export function narrateClassOverview(j: {
 
 export function narratePrep(s: PrepSurface, gentle: boolean): NarratedLine {
   const who = gentle ? "Em" : "Các em";
-  const text = `${who} chuẩn bị khá đều: xem trước ${s.xemTruoc.count}/${s.xemTruoc.total} buổi, làm bài chuẩn bị ${s.baiChuanBi.count}/${s.baiChuanBi.total}, nộp đúng giờ ${s.dungGio.count}/${s.dungGio.total}.`;
+  const text = `${who} xem trước bài ${s.xemTruoc.count}/${s.xemTruoc.total} buổi, làm ${s.baiChuanBi.count}/${s.baiChuanBi.total} bài chuẩn bị, nộp đúng giờ ${s.dungGio.count}/${s.dungGio.total} lượt.`;
   return line(text, [
     { label: "Xem trước", value: `${int(s.xemTruoc.count)}/${int(s.xemTruoc.total)}` },
     { label: "Bài chuẩn bị", value: `${int(s.baiChuanBi.count)}/${int(s.baiChuanBi.total)}` },
@@ -151,8 +145,8 @@ export function narrateConvergence(
     : "nên củng cố lại trong các buổi tới";
 
   const head = names
-    ? `Gom lại cả ba mặt, ${shown.length} chủ đề còn yếu hơn cả là ${names} — ${action}.`
-    : `Chưa thấy chủ đề nào yếu rõ ở cả ba mặt — ${action}.`;
+    ? `Nhìn lại cả ba mặt — trên lớp, ở nhà và bài thi — ${shown.length} chủ đề còn yếu nhất là ${names}, ${action}.`
+    : `Chưa có chủ đề nào yếu rõ ở cả ba mặt, ${action}.`;
 
   const figures: { label: string; value: string }[] = [
     { label: "Chủ đề yếu", value: int(shown.length) },

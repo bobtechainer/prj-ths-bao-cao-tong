@@ -21,7 +21,6 @@ export default function Lop() {
   const activeClassId = sp.get("class") ?? classId;
   const term = parseKy(sp.get("ky"));
   const subject = (sp.get("mon") as Subject) ?? "Địa lí";
-  const present = sp.get("present") === "1";
 
   const journey = repo.getClassJourney(activeClassId, term, subject);
   const klass = repo.getClass(activeClassId);
@@ -77,7 +76,6 @@ export default function Lop() {
         onSlice={(s) => updateQuery({ ky: s.term, mon: s.subject })}
         timeline={timeline}
         chapters={chapters}
-        initialPresent={present}
       />
     </div>
   );

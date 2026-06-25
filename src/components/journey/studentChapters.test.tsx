@@ -56,7 +56,7 @@ describe("buildStudentChapters", () => {
     wrap(<>{cycleChapter.render()}</>);
 
     // Expand the CycleBand detail section
-    fireEvent.click(screen.getByText(/Xem chi tiết chặng/));
+    fireEvent.click(screen.getByText(/Xem chi tiết/));
 
     // Find the exam link button or a mission row and click it
     const examBtn = screen.queryByText(/Đề.*bài làm/i) ?? screen.queryByText(/Đề & bài làm/);

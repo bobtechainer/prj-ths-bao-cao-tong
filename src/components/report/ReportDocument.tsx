@@ -270,7 +270,7 @@ function ClassPages({ r }: { r: ClassReport }) {
 
 function StudentCyclePage({ c, idx }: { c: StudentCycle; idx: number }) {
   return (
-    <Page footer={`Chặng ${idx}: ${c.label}`}>
+    <Page footer={`Giai đoạn ${idx} · ${c.label}`}>
       <CycleHead label={c.label} range={c.range} status={c.status} />
 
       <H>Trên lớp</H>
@@ -291,7 +291,7 @@ function StudentCyclePage({ c, idx }: { c: StudentCycle; idx: number }) {
 
       {c.exam && (
         <>
-          <H>Bài kiểm tra cuối chặng</H>
+          <H>Bài kiểm tra cuối giai đoạn</H>
           <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
             <Stat label="Điểm của em" value={diem(c.exam.score)} />
             <Stat label="TB lớp" value={diem(c.exam.classAvg)} />
@@ -353,7 +353,7 @@ function StudentJourneyPages({ j }: { j: StudentJourney }) {
 function ClassCyclePage({ c, idx }: { c: ClassCycle; idx: number }) {
   const s = c.lop.session;
   return (
-    <Page footer={`Chặng ${idx}: ${c.label}`}>
+    <Page footer={`Giai đoạn ${idx} · ${c.label}`}>
       <CycleHead label={c.label} range={c.range} status={c.status} />
 
       <H>Trên lớp</H>
@@ -374,7 +374,7 @@ function ClassCyclePage({ c, idx }: { c: ClassCycle; idx: number }) {
 
       {c.exam && (
         <>
-          <H>Bài kiểm tra cuối chặng — {c.exam.report.title}</H>
+          <H>Bài kiểm tra cuối giai đoạn — {c.exam.report.title}</H>
           <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
             <Stat label="Điểm TB" value={diem(c.exam.report.avg)} />
             <Stat label="Trung vị" value={diem(c.exam.report.median)} />

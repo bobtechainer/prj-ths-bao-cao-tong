@@ -33,6 +33,17 @@ function cycleRange(term: Ky, idx: number, boundaries: string[]): { from: string
   return { from, to };
 }
 
+/**
+ * Nhãn giai đoạn theo kỳ thay cho "Chặng N".
+ * Mỗi kỳ có 2 giai đoạn → "Đầu kỳ" / "Giữa kỳ"; bản Cả năm (4 giai đoạn) thêm số kỳ.
+ */
+function cycleLabel(idx: number, total: number): string {
+  const phase = idx % 2 === 0 ? "Đầu kỳ" : "Giữa kỳ";
+  if (total <= 2) return phase;
+  const roman = Math.floor(idx / 2) === 0 ? "I" : "II";
+  return `${phase} ${roman}`;
+}
+
 function avgOrNull(xs: number[]): number | null {
   return xs.length ? Math.round(mean(xs) * 10) / 10 : null;
 }
@@ -78,7 +89,7 @@ export function buildStudentJourney(studentId: string, term: Ky, subject: Subjec
 
     return {
       id: `cyc-${k}`,
-      label: `Chặng ${k + 1}`,
+      label: cycleLabel(k, boundaries.length),
       range,
       status,
       lop: {
@@ -170,7 +181,7 @@ export function buildClassJourney(classId: string, term: Ky, subject: Subject): 
     const isLast = k === boundaries.length - 1;
     return {
       id: `ccyc-${k}`,
-      label: `Chặng ${k + 1}`,
+      label: cycleLabel(k, boundaries.length),
       range,
       status,
       lop: {

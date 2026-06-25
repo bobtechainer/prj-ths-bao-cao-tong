@@ -27,9 +27,4 @@ describe("route học sinh — hành trình render không lỗi", () => {
     // KyMonPicker pill môn Địa lí có mặt
     expect(screen.getAllByText("Địa lí").length).toBeGreaterThan(0);
   });
-
-  test("nút Trình chiếu có mặt", () => {
-    wrap(`/app/hoc-sinh/${STUDENT_HERO}`);
-    expect(screen.getByRole("button", { name: /Trình chiếu/ })).toBeInTheDocument();
-  });
 });

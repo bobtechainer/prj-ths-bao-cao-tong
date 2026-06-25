@@ -20,7 +20,7 @@ describe("CycleBand", () => {
     expect(screen.getByText("Ba ô tóm tắt")).toBeInTheDocument();
     // chi tiết ẩn ban đầu
     expect(screen.queryByText("Chi tiết chặng đầy đủ")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: /Xem chi tiết chặng/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Xem chi tiết/ }));
     expect(screen.getByText("Chi tiết chặng đầy đủ")).toBeInTheDocument();
   });
 
@@ -36,7 +36,7 @@ describe("CycleBand", () => {
         <div>Chi tiết</div>
       </CycleBand>
     );
-    const btn = screen.getByRole("button", { name: /Xem chi tiết chặng/ });
+    const btn = screen.getByRole("button", { name: /Xem chi tiết/ });
     expect(btn).toHaveAttribute("aria-expanded", "false");
     fireEvent.click(btn);
     expect(btn).toHaveAttribute("aria-expanded", "true");

@@ -28,7 +28,6 @@ export default function HocSinh() {
 
   const term = parseKy(params.get("ky"));
   const isOverview = params.get("mon") === "all"; // ?mon=all → overview chéo môn
-  const present = params.get("present") === "1";
 
   const onSlice = useCallback(
     (next: { term: Ky; subject: SubjectFilter }) => {
@@ -68,7 +67,6 @@ export default function HocSinh() {
           onSlice={onSlice}
           timeline={timeline}
           chapters={chapters}
-          initialPresent={present}
         />
       </div>
     );
@@ -106,7 +104,6 @@ export default function HocSinh() {
         onSlice={onSlice}
         timeline={timeline}
         chapters={chapters}
-        initialPresent={present}
       />
     </div>
   );

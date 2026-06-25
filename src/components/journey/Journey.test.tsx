@@ -15,7 +15,7 @@ const timeline = [
 ];
 
 describe("Journey", () => {
-  test("render picker, timeline, các chương; nút Trình chiếu mở overlay", () => {
+  test("render picker, timeline, các chương", () => {
     render(
       <Journey
         slice={{ term: "ky-1", subject: "Địa lí" }}
@@ -29,8 +29,6 @@ describe("Journey", () => {
     expect(screen.getByText("Khúc hội tụ")).toBeInTheDocument();
     // timeline labels (xuất hiện cả ở rail + chương → dùng getAllByText)
     expect(screen.getAllByText("Mở đầu").length).toBeGreaterThan(0);
-    fireEvent.click(screen.getByRole("button", { name: /Trình chiếu/ }));
-    expect(screen.getByText(/Chương 1\/2/)).toBeInTheDocument();
   });
 
   test("đổi slice gọi onSlice", () => {

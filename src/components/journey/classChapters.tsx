@@ -110,7 +110,7 @@ function buildCycleChapter(c: ClassCycle): ChapterDef {
           <Narrator line={c.nha.narration} variant="line" />
           <ChartCard
             title="Tỉ lệ làm đúng theo chủ đề (bài về nhà)"
-            help="Tổng hợp các câu trong nhiệm vụ của chặng; chủ đề khó xếp lên trên."
+            help="Tổng hợp các câu trong nhiệm vụ của giai đoạn; chủ đề khó xếp lên trên."
           >
             <TopicMatrixBars
               topics={c.nha.report.items.map((i) => ({

@@ -18,7 +18,7 @@ function fmtRange(from: string, to: string): string {
   return `${d(from)} – ${d(to)}`;
 }
 
-/** Vỏ generic cho một chặng: dải gọn (label/range/status + Narrator + summary) + nút bung children chi tiết. */
+/** Vỏ generic cho một giai đoạn: dải gọn (label/range/status + Narrator + summary) + nút bung children chi tiết. */
 export function CycleBand({
   label,
   range,
@@ -61,7 +61,7 @@ export function CycleBand({
         className="mt-3 inline-flex items-center gap-1.5 rounded-md border bg-card px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:border-brand-300 hover:text-brand-700"
       >
         <ChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
-        {open ? "Thu gọn chặng" : "Xem chi tiết chặng"}
+        {open ? "Thu gọn" : "Xem chi tiết"}
       </button>
 
       {open && <div className="mt-4 space-y-4 border-t pt-4">{children}</div>}

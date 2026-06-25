@@ -37,7 +37,7 @@ function CycleSummary({ c }: { c: StudentCycle }) {
         hint={`đúng hạn ${pct(c.nha.onTimeRate)}`}
       />
       <SummaryCell
-        label="Bài thi chặng"
+        label="Bài kiểm tra"
         value={c.exam ? diem(c.exam.score) : "—"}
         hint={c.exam ? `TB lớp ${diem(c.exam.classAvg)}` : "chưa có"}
       />
@@ -66,7 +66,7 @@ function CycleDetail({ c, nav }: { c: StudentCycle; nav: (path: string) => void 
         </div>
       </ChartCard>
 
-      <ChartCard title="Ở nhà — bài về nhà trong chặng" help="Bấm một dòng để xem bài làm chi tiết.">
+      <ChartCard title="Ở nhà — bài về nhà giai đoạn này" help="Bấm một dòng để xem bài làm chi tiết.">
         <Narrator line={c.nha.narration} />
         <div className="mt-3 max-h-[280px] overflow-auto rounded-lg border">
           <Table>
@@ -113,7 +113,7 @@ function CycleDetail({ c, nav }: { c: StudentCycle; nav: (path: string) => void 
 
       {c.exam && (
         <ChartCard
-          title="Bài thi khép chặng"
+          title="Bài kiểm tra cuối giai đoạn"
           right={
             <button
               type="button"
@@ -182,7 +182,7 @@ export function buildStudentChapters(
     ),
   });
 
-  // Các chặng
+  // Các giai đoạn trong kỳ
   for (const c of j.cycles) {
     chapters.push({
       id: `cycle-${c.id}`,
