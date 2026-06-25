@@ -1,8 +1,13 @@
 import { ChevronRight } from "lucide-react";
-import type { SubjectEntry } from "@/data/types";
 import { rateColor } from "@/components/charts/chart-kit";
 import { cn } from "@/lib/utils";
 import { diem } from "@/lib/format";
+
+/** Chỉ cần subject + điểm; dùng chung cho overview học sinh (latestExamScore) lẫn lớp (examAvg). */
+export interface ComparableSubject {
+  subject: string;
+  latestExamScore: number | null;
+}
 
 function bandLabel(score: number | null): string {
   if (score === null) return "";
@@ -13,7 +18,7 @@ function bandLabel(score: number | null): string {
 }
 
 interface Props {
-  entries: SubjectEntry[];
+  entries: ComparableSubject[];
   onDrillSubject: (subject: string) => void;
 }
 
