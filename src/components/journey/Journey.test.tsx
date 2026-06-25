@@ -47,4 +47,60 @@ describe("Journey", () => {
     fireEvent.click(screen.getByRole("button", { name: "Cả năm" }));
     expect(onSlice).toHaveBeenCalledWith({ term: "ca-nam", subject: "Địa lí" });
   });
+
+  test("chapters container không phải nested scroll region (không có overflow-y-auto hoặc h-[calc()", () => {
+    const { container } = render(
+      <Journey
+        slice={{ term: "ky-1", subject: "Địa lí" }}
+        availableSlices={{ terms: ["ky-1"], subjects: ["Địa lí"] }}
+        onSlice={() => {}}
+        timeline={timeline}
+        chapters={chapters}
+      />
+    );
+    // The chapters wrapper must NOT have fixed-height overflow-y-auto (nested scroller)
+    const allDivs = container.querySelectorAll("div");
+    for (const div of allDivs) {
+      const cls = div.className ?? "";
+      // Must not have both overflow-y-auto AND a calc height on the same element
+      expect(
+        cls.includes("overflow-y-auto") && cls.includes("h-[calc("),
+        `Found nested scroll container with class: "${cls}"`
+      ).toBe(false);
+    }
+  });
+
+  test("rail renders với activeId mặc định là timeline[0].id khi không có 'current'", () => {
+    render(
+      <Journey
+        slice={{ term: "ky-1", subject: "Địa lí" }}
+        availableSlices={{ terms: ["ky-1"], subjects: ["Địa lí"] }}
+        onSlice={() => {}}
+        timeline={timeline}
+        chapters={chapters}
+      />
+    );
+    // The first timeline item should be active (aria-current="location") since none is "current"
+    const nav = screen.getByRole("navigation", { name: /Trục thời gian/ });
+    const activeLinks = nav.querySelectorAll('a[aria-current="location"]');
+    expect(activeLinks.length).toBe(1);
+    expect(activeLinks[0].getAttribute("href")).toBe(`#${timeline[0].id}`);
+  });
+
+  test("rail anchors có href='#<id>' cho mỗi mục timeline", () => {
+    render(
+      <Journey
+        slice={{ term: "ky-1", subject: "Địa lí" }}
+        availableSlices={{ terms: ["ky-1"], subjects: ["Địa lí"] }}
+        onSlice={() => {}}
+        timeline={timeline}
+        chapters={chapters}
+      />
+    );
+    const nav = screen.getByRole("navigation", { name: /Trục thời gian/ });
+    const links = nav.querySelectorAll("a[href]");
+    const hrefs = Array.from(links).map((a) => a.getAttribute("href"));
+    expect(hrefs).toContain("#mo-dau");
+    expect(hrefs).toContain("#hoi-tu");
+  });
 });

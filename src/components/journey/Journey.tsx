@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Play } from "lucide-react";
 import type { Ky, Subject, EventStatus } from "@/data/types";
 import { useReduced } from "@/components/motion";
-import { cn } from "@/lib/utils";
 import type { ChapterDef } from "./types-journey";
 import { KyMonPicker } from "./KyMonPicker";
 import { TimelineRail } from "./TimelineRail";
@@ -29,7 +28,54 @@ export function Journey({
 }): JSX.Element {
   const reduced = useReduced();
   const [present, setPresent] = useState(!!initialPresent);
-  const activeId = timeline.find((t) => t.status === "current")?.id ?? timeline[0]?.id;
+  const [activeId, setActiveId] = useState<string | undefined>(timeline[0]?.id);
+  const sectionRefs = useRef<Map<string, Element>>(new Map());
+
+  // Scrollspy: observe each chapter section in the viewport (AppShell's <main> is root)
+  useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") return;
+
+    const ids = timeline.map((t) => t.id);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // Find the topmost intersecting section
+        const intersecting = entries
+          .filter((e) => e.isIntersecting)
+          .map((e) => e.target.id);
+
+        if (intersecting.length === 0) return;
+
+        // Pick the one earliest in the timeline order
+        const next = ids.find((id) => intersecting.includes(id));
+        if (next !== undefined) {
+          setActiveId(next);
+        }
+      },
+      {
+        root: null, // viewport — AppShell's main scrolls the whole page
+        rootMargin: "-15% 0px -75% 0px",
+        threshold: 0,
+      }
+    );
+
+    const elements = sectionRefs.current;
+    ids.forEach((id) => {
+      const el = elements.get(id) ?? document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [timeline]);
+
+  // Register chapter section elements via callback ref pattern
+  const setRef = (id: string) => (el: Element | null) => {
+    if (el) {
+      sectionRefs.current.set(id, el);
+    } else {
+      sectionRefs.current.delete(id);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -51,26 +97,26 @@ export function Journey({
         </button>
       </div>
 
-      {/* Main layout: sidebar rail + scrollable chapters */}
+      {/* Main layout: sidebar rail + chapters flowing in the page (no nested scroller) */}
       <div className="grid gap-6 lg:grid-cols-[200px_1fr]">
-        {/* TimelineRail — hidden on small screens, sticky on desktop */}
+        {/* TimelineRail — hidden on small screens, sticky on desktop, clears sticky picker */}
         <aside className="hidden lg:block">
-          <div className="sticky top-20">
+          <div className="sticky top-24">
             <TimelineRail items={timeline} activeId={activeId} />
           </div>
         </aside>
 
-        {/* Scroll-snap container: bounded height, overflow-y-auto, snap on full desktop */}
+        {/* Plain block: flows in AppShell's <main> scroller — no fixed height, no overflow */}
         <div
-          className={cn(
-            "h-[calc(100dvh-8rem)] overflow-y-auto space-y-8 pr-1",
-            !reduced && "md:snap-y md:snap-mandatory"
-          )}
+          className="space-y-10 md:space-y-12"
+          style={!reduced ? { scrollBehavior: "smooth" } : undefined}
         >
           {chapters.map((c) => (
-            <Chapter key={c.id} id={c.id} title={c.title} status={c.status}>
-              {c.render()}
-            </Chapter>
+            <div key={c.id} ref={setRef(c.id) as React.Ref<HTMLDivElement>}>
+              <Chapter id={c.id} title={c.title} status={c.status}>
+                {c.render()}
+              </Chapter>
+            </div>
           ))}
         </div>
       </div>
