@@ -456,6 +456,38 @@ export function buildClassSubjectReport(classId: string, subject: Subject): Clas
   const sortedScores = [...examScores].sort((a, b) => a - b);
   const med = r1(sortedScores[Math.floor(sortedScores.length / 2)] ?? avg);
 
+  // Remap Địa lí topic labels → subject's topic labels (deterministic, order-preserving).
+  const subjTopics = SUBJECT_TOPICS[subject];
+  const topicMap = new Map<string, string>();
+  const remap = (name: string): string => {
+    if (!topicMap.has(name)) topicMap.set(name, subjTopics[topicMap.size % subjTopics.length]);
+    return topicMap.get(name)!;
+  };
+
+  const relTopics = (ts: TopicAccuracy[]): TopicAccuracy[] =>
+    ts.map((t) => ({ ...t, topic: remap(t.topic) }));
+  const relQs = (qs: QuestionReport[]): QuestionReport[] =>
+    qs.map((q) => ({ ...q, topic: remap(q.topic) }));
+
+  const thi = {
+    ...base.thi,
+    title: `Thi thử môn ${subject}`,
+    subject,
+    avg,
+    median: med,
+    codes: base.thi.codes.map((c) => ({
+      ...c,
+      topics: relTopics(c.topics),
+      topMissed: relQs(c.topMissed),
+    })),
+    topMissedByCode: base.thi.topMissedByCode.map((g) => ({
+      ...g,
+      questions: relQs(g.questions),
+    })),
+  };
+  const nha = { ...base.nha, items: relQs(base.nha.items) };
+  const lop = { ...base.lop, topics: relTopics(base.lop.topics) };
+
   return {
     ...base,
     subject,
@@ -465,7 +497,9 @@ export function buildClassSubjectReport(classId: string, subject: Subject): Clas
     weakTopics,
     roster,
     effortVsResult: roster.map((x) => ({ studentId: x.studentId, name: x.name, effort: x.effort, result: x.learning })),
-    thi: { ...base.thi, avg, median: med },
+    thi,
+    nha,
+    lop,
   };
 }
 
