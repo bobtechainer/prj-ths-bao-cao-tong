@@ -48,7 +48,8 @@ export default function HocSinh() {
     const timeline: { id: string; label: string; status: EventStatus }[] = chapters.map((c) => ({
       id: c.id,
       label: c.title,
-      status: "past",
+      // Hội tụ neo vào kỳ thi sắp tới (giống bản một-môn); Mở đầu/Các môn là ảnh chụp hiện trạng.
+      status: c.id === "hoi-tu" ? "upcoming" : "past",
     }));
     return (
       <div className="space-y-5">
