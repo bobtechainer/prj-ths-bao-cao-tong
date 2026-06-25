@@ -3,10 +3,12 @@ import type {
   CycleSession, MissionStudentReportView,
   ClassJourney, ClassCycle,
 } from "@/data/types";
+import { SUBJECTS } from "@/data/types";
 import {
   buildStudentProfile, buildClassReport,
-  studentExamsForKy, studentSessionsForKy, studentMissionsForKy, missionDate,
-  buildStudentPrepSurface, buildClassPrepSurface,
+  buildStudentSubjectSlice,
+  studentExamsForKy, missionDate,
+  buildClassPrepSurface,
   type DatedExam,
 } from "./builders";
 import {
@@ -41,11 +43,11 @@ export function buildStudentJourney(studentId: string, term: Ky, subject: Subjec
   const now = DEMO_NOW;
   const nextExam = resolveNextExam(now);
 
-  // Lát môn: profile hiện chỉ có Địa lí → môn khác là lát rỗng.
-  const subjectMatches = subject === "Địa lí";
-  const exams: DatedExam[] = subjectMatches ? studentExamsForKy(studentId, term) : [];
-  const sessions = subjectMatches ? studentSessionsForKy(studentId, term) : [];
-  const missions: MissionStudentReportView[] = subjectMatches ? studentMissionsForKy(studentId, term) : [];
+  // Lát môn: Địa lí dùng dữ liệu thật; môn khác dùng dữ liệu seeded deterministic.
+  const slice = buildStudentSubjectSlice(studentId, term, subject);
+  const exams: DatedExam[] = slice.exams;
+  const sessions = slice.sessions;
+  const missions: MissionStudentReportView[] = slice.missions;
 
   const boundaries = KY_BOUNDARIES[term];
   const sessionBuckets = partitionByCycle(sessions, boundaries);
@@ -116,8 +118,8 @@ export function buildStudentJourney(studentId: string, term: Ky, subject: Subjec
     };
   });
 
-  const prepSurface = buildStudentPrepSurface(studentId, term);
-  const empty = !subjectMatches || (exams.length === 0 && sessions.length === 0 && missions.length === 0);
+  const prepSurface = slice.prep;
+  const empty = exams.length === 0 && sessions.length === 0 && missions.length === 0;
 
   return {
     kind: "student",
@@ -127,28 +129,28 @@ export function buildStudentJourney(studentId: string, term: Ky, subject: Subjec
     className: profile.className,
     schoolName: profile.schoolName,
     overview: {
-      rank: profile.rank,
-      classSize: profile.classSize,
-      trend: profile.trend,
-      learningIndex: profile.learningIndex,
-      effortIndex: profile.effortIndex,
+      rank: slice.rank,
+      classSize: slice.classSize,
+      trend: slice.trend,
+      learningIndex: slice.learningIndex,
+      effortIndex: slice.effortIndex,
       narration: narrateStudentOverview({
-        rank: profile.rank,
-        classSize: profile.classSize,
-        trend: profile.trend,
-        learningIndex: profile.learningIndex,
-        effortIndex: profile.effortIndex,
+        rank: slice.rank,
+        classSize: slice.classSize,
+        trend: slice.trend,
+        learningIndex: slice.learningIndex,
+        effortIndex: slice.effortIndex,
       }),
     },
     prep: { surface: prepSurface, narration: narratePrep(prepSurface, true) },
     cycles,
     convergence: {
-      // ERRATA: convergence.topics = profile.weakTopics DIRECTLY (keep real accuracyAvg)
-      topics: profile.weakTopics,
+      // ERRATA: convergence.topics = profile.weakTopics DIRECTLY cho Địa lí (keep real accuracyAvg)
+      topics: slice.weakTopics,
       nextExam,
-      narration: narrateConvergence(profile.weakTopics, true, nextExam),
+      narration: narrateConvergence(slice.weakTopics, true, nextExam),
     },
-    availableSlices: { terms: ["ky-1", "ky-2", "ca-nam"], subjects: ["Địa lí"] },
+    availableSlices: { terms: ["ky-1", "ky-2", "ca-nam"], subjects: [...SUBJECTS] },
     empty,
   };
 }

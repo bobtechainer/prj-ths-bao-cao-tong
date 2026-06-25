@@ -1,4 +1,4 @@
-import type { Khoi, Klass, Ky, School, Student, Teaching, UpcomingExam } from "@/data/types";
+import type { Khoi, Klass, Ky, School, Student, Subject, Teaching, UpcomingExam } from "@/data/types";
 import { Rng } from "@/lib/random";
 import { HO, DEM_NAM, DEM_NU, TEN_NAM, TEN_NU, SCHOOL_NAMES } from "./names";
 import { REAL_STUDENTS, type RealStudent } from "./sontay.real";
@@ -18,6 +18,81 @@ export const DIA_TOPICS = [
   "Ngoại thương và kinh tế",
   "Kĩ năng biểu đồ và bảng số liệu",
 ];
+
+/** Bộ chủ đề theo môn — dùng để seed dữ liệu hành trình các môn không phải Địa lí. */
+export const SUBJECT_TOPICS: Record<Subject, string[]> = {
+  "Toán": [
+    "Giới hạn và liên tục",
+    "Đạo hàm và ứng dụng",
+    "Tích phân",
+    "Hàm số và đồ thị",
+    "Số phức",
+    "Tổ hợp và xác suất",
+    "Dãy số và cấp số",
+    "Hình học không gian",
+  ],
+  "Ngữ văn": [
+    "Đọc hiểu văn bản",
+    "Nghị luận xã hội",
+    "Nghị luận văn học",
+    "Phong cách ngôn ngữ",
+    "Thơ hiện đại",
+    "Văn xuôi hiện đại",
+    "Kĩ năng viết đoạn văn",
+    "Lý luận văn học",
+  ],
+  "Tiếng Anh": [
+    "Ngữ pháp và cấu trúc",
+    "Từ vựng theo chủ đề",
+    "Đọc hiểu",
+    "Điền từ vào đoạn văn",
+    "Giao tiếp và tình huống",
+    "Viết lại câu",
+    "Phát âm và trọng âm",
+    "Kĩ năng nghe hiểu",
+  ],
+  "Vật lí": [
+    "Dao động cơ học",
+    "Sóng cơ và sóng âm",
+    "Điện xoay chiều",
+    "Dao động và sóng điện từ",
+    "Quang học",
+    "Lượng tử ánh sáng",
+    "Hạt nhân nguyên tử",
+    "Vật lí và đời sống",
+  ],
+  "Hóa học": [
+    "Este và lipit",
+    "Cacbohiđrat",
+    "Amin và amino axit",
+    "Polime và vật liệu",
+    "Đại cương kim loại",
+    "Kim loại kiềm và kiềm thổ",
+    "Sắt và hợp chất của sắt",
+    "Hóa học và môi trường",
+  ],
+  "Sinh học": [
+    "Di truyền phân tử",
+    "Di truyền nhiễm sắc thể",
+    "Quy luật di truyền",
+    "Di truyền quần thể",
+    "Tiến hóa",
+    "Sinh thái học",
+    "Sinh lí thực vật",
+    "Sinh lí động vật",
+  ],
+  "Lịch sử": [
+    "Cách mạng tháng Tám và kháng chiến chống Pháp",
+    "Kháng chiến chống Mĩ",
+    "Lịch sử thế giới hiện đại",
+    "Quan hệ quốc tế sau 1945",
+    "Việt Nam từ 1954 đến 1975",
+    "Việt Nam từ 1975 đến nay",
+    "Đổi mới và hội nhập",
+    "Kĩ năng khai thác tư liệu lịch sử",
+  ],
+  "Địa lí": DIA_TOPICS,
+};
 
 const CLASS_FOCI = ["Văn", "Toán", "Anh", "Lí", "Hóa", "Sinh"];
 

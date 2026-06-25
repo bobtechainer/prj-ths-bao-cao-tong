@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import type { Ky, Subject, EventStatus } from "@/data/types";
-import { KY_LABEL } from "@/data/types";
+import { KY_LABEL, SUBJECTS } from "@/data/types";
 import { mockRepository as repo } from "@/data/mockRepository";
 import { PageHeader } from "@/components/report/PageHeader";
 import { ExportButton } from "@/components/report/ExportButton";
@@ -12,15 +12,20 @@ function parseKy(raw: string | null): Ky {
   return raw === "ky-2" || raw === "ca-nam" || raw === "ky-1" ? raw : "ky-1";
 }
 
+function parseMon(raw: string | null): Subject {
+  const s = raw ?? "";
+  return (SUBJECTS as readonly string[]).includes(s) ? (s as Subject) : "Địa lí";
+}
+
 export default function HocSinh() {
   const { studentId = "" } = useParams();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
 
   const term = parseKy(params.get("ky"));
-  const monParam = params.get("mon") ?? "";
+  const subject = parseMon(params.get("mon"));
   const present = params.get("present") === "1";
-  const j = repo.getStudentJourney(studentId, term, (monParam || "Địa lí") as Subject);
+  const j = repo.getStudentJourney(studentId, term, subject);
 
   const onSlice = useCallback(
     (next: { term: Ky; subject: Subject }) => {

@@ -1,6 +1,6 @@
 import type {
   ClassReport, ClassRosterRow, EngagementPoint, ExamCodeReport, ExamReport, HomeReport,
-  Ky, MissionReportView, MissionStudentReportView, PhongOverview, PhongSchoolRow, PrepSurface,
+  IndexBreakdown, Ky, MissionReportView, MissionStudentReportView, PhongOverview, PhongSchoolRow, PrepSurface,
   QuestionReport, SchoolReport, SessionAnalytics, Student, StudentProfile, Subject, TopicAccuracy,
   WeakTopic,
 } from "@/data/types";
@@ -10,7 +10,7 @@ import { learningIndex, effortIndex, convergeWeakTopics } from "@/lib/indices";
 import { examInsights } from "@/lib/insights";
 import { Rng } from "@/lib/random";
 import {
-  getWorld, CLASS_HERO, SCHOOL_HERO, DIA_TOPICS, cycleDate,
+  getWorld, CLASS_HERO, SCHOOL_HERO, DIA_TOPICS, SUBJECT_TOPICS, cycleDate,
 } from "./world";
 import {
   REAL_STUDENTS, REAL_CODE1, REAL_CODE2, REAL_MISSED_1, REAL_MISSED_2, REAL_HIST_TOTAL,
@@ -729,6 +729,204 @@ export function buildClassPrepSurface(classId: string, term: Ky): PrepSurface {
     xemTruoc: { count: xemTruoc, total },
     baiChuanBi: { count: submitted, total: report.nha.students.length || 1 },
     dungGio: { count: onTime, total: report.nha.students.length || 1 },
+  };
+}
+
+// ---- Lát môn seeded cho hành trình học sinh ----
+
+export interface StudentSubjectSlice {
+  exams: DatedExam[];
+  sessions: DatedSession[];
+  missions: MissionStudentReportView[];
+  prep: PrepSurface;
+  weakTopics: WeakTopic[];
+  strongTopics: string[];
+  learningIndex: IndexBreakdown;
+  effortIndex: IndexBreakdown;
+  rank: number;
+  classSize: number;
+  trend: "up" | "flat" | "down";
+}
+
+/**
+ * Xây lát dữ liệu cho một môn học cụ thể của học sinh.
+ * - subject === "Địa lí": đi qua đúng luồng thật (buildStudentProfile + helpers).
+ * - Môn khác: sinh dữ liệu deterministic bằng Rng seed theo (studentId + subject + term).
+ *   Số liệu THÔ được bịa; chỉ số tổng hợp ĐƯỢC TÍNH từ số liệu thô đó.
+ */
+export function buildStudentSubjectSlice(
+  studentId: string,
+  term: Ky,
+  subject: Subject
+): StudentSubjectSlice {
+  if (subject === "Địa lí") {
+    return buildDiaLiSlice(studentId, term);
+  }
+  return buildSeededSlice(studentId, term, subject);
+}
+
+function buildDiaLiSlice(studentId: string, term: Ky): StudentSubjectSlice {
+  const profile = buildStudentProfile(studentId);
+  const exams = studentExamsForKy(studentId, term);
+  const sessions = studentSessionsForKy(studentId, term);
+  const missions = studentMissionsForKy(studentId, term);
+  const prep = buildStudentPrepSurface(studentId, term);
+  return {
+    exams,
+    sessions,
+    missions,
+    prep,
+    weakTopics: profile.weakTopics,
+    strongTopics: profile.strongTopics,
+    learningIndex: profile.learningIndex,
+    effortIndex: profile.effortIndex,
+    rank: profile.rank,
+    classSize: profile.classSize,
+    trend: profile.trend,
+  };
+}
+
+function buildSeededSlice(
+  studentId: string,
+  term: Ky,
+  subject: Subject
+): StudentSubjectSlice {
+  const rng = new Rng("subj-" + studentId + "-" + subject);
+  const world = getWorld();
+  const student = world.byId.get(studentId)!;
+  const klass = world.classById.get(student.classId)!;
+  const classSize = klass.studentIds.length;
+
+  // ---- Số liệu THÔ (bịa deterministic) ----
+  const exam = r1(clamp(rng.gauss(7.1, 1.3, 3, 10), 3, 10));
+  const home = r1(clamp(rng.gauss(7.3, 1.1, 3, 10), 3, 10));
+  const quizLop = clamp(rng.gauss(72, 12, 20, 100), 20, 100);
+  const attendanceRate = clamp(rng.gauss(0.94, 0.06, 0.6, 1), 0.6, 1);
+  const hoanThanh = rng.bool(0.82) ? 95 : 68;
+  const dungHan = rng.bool(0.85) ? 100 : 60;
+  const rank = rng.int(1, Math.max(1, classSize));
+
+  // ---- Chỉ số TÍNH từ số thô ----
+  const li = learningIndex({ thi: normalize(exam, 10), nha: normalize(home, 10), quizLop });
+  const ei = effortIndex({ chuyenCan: attendanceRate * 100, hoanThanh, dungHan });
+
+  // ---- Trend ----
+  const delta = rng.gauss(0, 0.6, -2, 2);
+  const trend: "up" | "flat" | "down" = delta >= 0.3 ? "up" : delta <= -0.3 ? "down" : "flat";
+
+  // ---- Topics (subjects-specific set) ----
+  const topics = SUBJECT_TOPICS[subject];
+  const strongCount = rng.int(1, 3);
+  const weakCount = rng.int(1, 3);
+  const sortedTopics = [...topics].sort(() => rng.next() - 0.5); // shuffle deterministic
+  const strongTopics = sortedTopics.slice(0, strongCount);
+  const weakNames = sortedTopics.slice(strongCount, strongCount + weakCount);
+
+  const weakTopics: WeakTopic[] = weakNames.map((topic, i) => {
+    const wr = new Rng("weak-subj-" + studentId + "-" + subject + "-" + i);
+    const accLop = clamp(wr.gauss(0.52, 0.1, 0.2, 0.95), 0.2, 0.95);
+    const accNha = clamp(wr.gauss(0.70, 0.1, 0.3, 0.98), 0.3, 0.98);
+    const accThi = clamp(wr.gauss(0.50, 0.1, 0.2, 0.9), 0.2, 0.9);
+    const surfaces = { lop: accLop < 0.6, nha: accNha < 0.6, thi: accThi < 0.6 };
+    const weakSurfaceCount = Number(surfaces.lop) + Number(surfaces.nha) + Number(surfaces.thi);
+    return {
+      topic,
+      surfaces,
+      confirmed: weakSurfaceCount >= 2,
+      accuracyAvg: (accLop + accNha + accThi) / 3,
+    };
+  });
+
+  // ---- Exams (DatedExam[]) ----
+  const numExams = 4;
+  const examTermLabels = ["Đợt 1 · đầu năm", "Đợt 2 · giữa kì", "Đợt 3 · trước thi", "Thi thử gần nhất"];
+  const classAvgBase = r1(clamp(rng.gauss(7.2, 0.4, 5, 9), 5, 9));
+  const exams: DatedExam[] = examTermLabels.map((label, i) => {
+    const eh = new Rng("eh-subj-" + studentId + "-" + subject + "-" + i);
+    const score = i === numExams - 1 ? exam : r1(clamp(exam - 0.9 + i * 0.32 + eh.gauss(0, 0.25), 0, 10));
+    const sp = localSpread(term === "ca-nam" ? "ca-nam" : term, i, numExams);
+    return {
+      term: label,
+      subject,
+      score,
+      classAvg: r1(clamp(classAvgBase - 0.25 + i * 0.1, 4, 10)),
+      date: cycleDate(sp.ky, sp.idx, sp.total),
+    };
+  }).filter((_, i) => term === "ca-nam" || kyOfIndex(term, i, numExams) === term);
+
+  // ---- Sessions (DatedSession[]) ----
+  const numSessions = 5;
+  const sessions: DatedSession[] = Array.from({ length: numSessions }, (_, i) => {
+    const sr = new Rng("ses-subj-" + studentId + "-" + subject + "-" + i);
+    const sp = localSpread(term === "ca-nam" ? "ca-nam" : term, i, numSessions);
+    return {
+      session: `Buổi ${i + 1}`,
+      attendance: sr.bool(attendanceRate) ? 1 : 0,
+      quizAccuracy: clamp(sr.gauss(0.70, 0.12, 0.3, 1), 0.3, 1),
+      date: cycleDate(sp.ky, sp.idx, sp.total),
+    };
+  }).filter((_, i) => term === "ca-nam" || kyOfIndex(term, i, numSessions) === term);
+
+  // ---- Missions (MissionStudentReportView[]) ----
+  const missionTitles = [
+    `Ôn tập ${subject} chương 1`,
+    `Bài tập ${subject} nâng cao`,
+    `Trắc nghiệm ${subject} giữa kì`,
+    `Đề luyện ${subject} cuối kì`,
+    `Bài về nhà ${subject} tuần 12`,
+    `Ôn ${subject} trọng tâm`,
+  ];
+  const statuses = ["graded", "graded", "submitted", "graded", "inprogress", "todo"] as const;
+  const missionRng = new Rng("mis-subj-" + studentId + "-" + subject);
+  const allMissions: MissionStudentReportView[] = missionTitles.map((title, i) => {
+    const mr = new Rng("ms-subj-" + studentId + "-" + subject + "-" + i);
+    const status = statuses[i];
+    const done = status === "graded" || status === "submitted";
+    const totalQ = 20;
+    const correct = done ? mr.int(11, 19) : 0;
+    void missionRng;
+    return {
+      missionId: `pm-subj-${studentId}-${subject}-${i}`,
+      studentId,
+      studentName: student.name,
+      title,
+      totalScore: done ? r1((correct / totalQ) * 10) : null,
+      correctCount: correct,
+      wrongCount: done ? totalQ - correct : 0,
+      totalQuestions: totalQ,
+      durationSec: done ? mr.int(400, 1400) : 0,
+      status,
+      attempts: mr.int(1, 3),
+      late: mr.bool(0.15),
+    };
+  });
+  const missions = allMissions.filter((_, i) =>
+    term === "ca-nam" || kyOfIndex(term, i, allMissions.length) === term
+  );
+
+  // ---- PrepSurface từ sessions và missions (số thô) ----
+  const submittedMissions = missions.filter((m) => m.status === "graded" || m.status === "submitted");
+  const prep: PrepSurface = {
+    xemTruoc: {
+      count: sessions.filter((s) => s.attendance > 0).length,
+      total: sessions.length || 1,
+    },
+    baiChuanBi: { count: submittedMissions.length, total: missions.length || 1 },
+    dungGio: { count: missions.filter((m) => !m.late).length, total: missions.length || 1 },
+  };
+
+  return {
+    exams,
+    sessions,
+    missions,
+    prep,
+    weakTopics,
+    strongTopics,
+    learningIndex: li,
+    effortIndex: ei,
+    rank,
+    classSize,
+    trend,
   };
 }
 
