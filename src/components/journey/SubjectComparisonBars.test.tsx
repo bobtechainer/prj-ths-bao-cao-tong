@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { buildStudentOverview } from "@/data/mock/overview";
 import { STUDENT_HERO } from "@/data/mock/world";
+import { diem } from "@/lib/format";
 import { SubjectComparisonBars } from "./SubjectComparisonBars";
 
 describe("SubjectComparisonBars", () => {
@@ -27,13 +28,14 @@ describe("SubjectComparisonBars", () => {
         onDrillSubject={vi.fn()}
       />
     );
-    // At least one formatted score visible (e.g. "7.5")
+    // At least one formatted score visible (e.g. "7,5" in Vietnamese format)
     expect(withScore.length).toBeGreaterThan(0);
     // The first scored entry's value must appear somewhere
     const first = withScore[0];
-    const formatted = first.latestExamScore!.toFixed(1);
-    // Use getAllByText to allow multiple occurrences
-    expect(screen.getAllByText(new RegExp(formatted.replace(".", "\\."), "i")).length).toBeGreaterThanOrEqual(1);
+    const formatted = diem(first.latestExamScore!);
+    // Escape comma for regex; use getAllByText to allow multiple occurrences
+    const escaped = formatted.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    expect(screen.getAllByText(new RegExp(escaped, "i")).length).toBeGreaterThanOrEqual(1);
   });
 
   test("clicking a row calls onDrillSubject with the subject name", () => {

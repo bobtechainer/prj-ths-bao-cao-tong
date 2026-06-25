@@ -2,6 +2,7 @@ import { ChevronRight } from "lucide-react";
 import type { SubjectEntry } from "@/data/types";
 import { rateColor } from "@/components/charts/chart-kit";
 import { cn } from "@/lib/utils";
+import { diem } from "@/lib/format";
 
 function bandLabel(score: number | null): string {
   if (score === null) return "";
@@ -36,7 +37,7 @@ export function SubjectComparisonBars({ entries, onDrillSubject }: Props) {
             data-strongest={isStrongest ? "true" : undefined}
             data-weakest={isWeakest ? "true" : undefined}
             onClick={() => onDrillSubject(entry.subject)}
-            aria-label={`${entry.subject}${score !== null ? ` — ${score.toFixed(1)} điểm` : " — chưa có điểm"}. Nhấn để xem chi tiết.`}
+            aria-label={`${entry.subject}${score !== null ? ` — ${diem(score)} điểm` : " — chưa có điểm"}. Nhấn để xem chi tiết.`}
             className={cn(
               "group flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left transition-colors hover:border-brand-300 hover:bg-brand-50/40",
               isStrongest && "border-success-200 bg-success-50/30",
@@ -62,7 +63,7 @@ export function SubjectComparisonBars({ entries, onDrillSubject }: Props) {
               className="w-14 shrink-0 text-right tabular-nums text-sm font-semibold"
               style={{ color }}
             >
-              {score !== null ? score.toFixed(1) : "—"}
+              {score !== null ? diem(score) : "—"}
             </span>
 
             {/* Band text label */}
