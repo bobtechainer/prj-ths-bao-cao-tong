@@ -41,7 +41,7 @@ export function buildOverviewChapters(
               hideValue
             />
           </div>
-          <Narrator line={{ text: narrateOverviewMoDau(ov).text, figures: [] }} variant="opener" />
+          <Narrator line={narrateOverviewMoDau(ov)} variant="opener" />
         </div>
       ),
     },
@@ -68,7 +68,7 @@ export function buildOverviewChapters(
       title: "Hội tụ",
       render: () => (
         <div className="space-y-4">
-          <Narrator line={{ text: narrateOverviewHoiTu(ov, nextExam).text, figures: [] }} />
+          <Narrator line={narrateOverviewHoiTu(ov, nextExam)} />
           {ov.weakest.weakTopics.length > 0 && (
             <ChartCard title="Chủ đề cần chú ý">
               <ul className="space-y-1.5 text-sm">

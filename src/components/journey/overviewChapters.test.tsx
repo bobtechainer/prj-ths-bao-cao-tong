@@ -29,9 +29,10 @@ describe("buildOverviewChapters", () => {
     const moDau = chapters.find((c) => c.id === "mo-dau")!;
     wrap(<>{moDau.render()}</>);
     // The narrator text from narrateOverviewMoDau contains overallLearningIndex
+    // Use getAllByText to find all occurrences (ProgressRing + Narrator)
     expect(
-      screen.getByText(new RegExp(String(ov.overallLearningIndex)))
-    ).toBeInTheDocument();
+      screen.getAllByText(new RegExp(String(ov.overallLearningIndex))).length
+    ).toBeGreaterThanOrEqual(1);
   });
 
   test("cac-mon chapter shows all 8 subject names", () => {
@@ -65,8 +66,9 @@ describe("buildOverviewChapters", () => {
     const chapters = buildOverviewChapters(ov, vi.fn());
     const hoiTu = chapters.find((c) => c.id === "hoi-tu")!;
     wrap(<>{hoiTu.render()}</>);
+    // Use getAllByText to find all occurrences (Narrator text + figure badge)
     expect(
-      screen.getByText(new RegExp(ov.weakest.subject))
-    ).toBeInTheDocument();
+      screen.getAllByText(new RegExp(ov.weakest.subject)).length
+    ).toBeGreaterThanOrEqual(1);
   });
 });
