@@ -1,5 +1,6 @@
 import type {
   NarratedLine, PrepSurface, WeakTopic, UpcomingExam, EventStatus, IndexBreakdown,
+  StudentOverview,
 } from "@/data/types";
 import { diem, pct, int } from "@/lib/format";
 
@@ -160,4 +161,59 @@ export function narrateConvergence(
   if (nextExam) figures.push({ label: nextExam.title, value: nextExam.date });
 
   return line(head, figures);
+}
+
+export function narrateOverviewMoDau(ov: StudentOverview): NarratedLine {
+  const trendWord: Record<"up" | "flat" | "down", string> = {
+    up: "đang đi lên",
+    flat: "giữ nhịp ổn định",
+    down: "có phần chững lại",
+  };
+  const trend = ov.strongest.trend;
+  const strongScore = ov.strongest.latestExamScore;
+  const scorePart = strongScore !== null ? ` (${diem(strongScore)} điểm)` : "";
+  const text = `Nhìn chung cả ${ov.subjects.length} môn, chỉ số học tập trung bình đạt ${ov.overallLearningIndex} — nhịp học ${trendWord[trend]}. Môn mạnh nhất là ${ov.strongest.subject}${scorePart}.`;
+  return line(text, [
+    { label: "Chỉ số học tập TB", value: String(ov.overallLearningIndex) },
+    { label: "Môn mạnh nhất", value: ov.strongest.subject },
+    ...(strongScore !== null
+      ? [{ label: `Điểm · ${ov.strongest.subject}`, value: diem(strongScore) }]
+      : []),
+  ]);
+}
+
+export function narrateOverviewCacMon(ov: StudentOverview): NarratedLine {
+  const strongScore = ov.strongest.latestExamScore;
+  const weakScore = ov.weakest.latestExamScore;
+  const strongPart = strongScore !== null ? ` ${diem(strongScore)} điểm` : "";
+  const weakPart = weakScore !== null ? ` ${diem(weakScore)} điểm` : "";
+  const text = `${ov.strongest.subject}${strongPart} là điểm sáng; ${ov.weakest.subject}${weakPart} là môn em cần để ý hơn trong kỳ này.`;
+  return line(text, [
+    { label: `Mạnh nhất · ${ov.strongest.subject}`, value: strongScore !== null ? diem(strongScore) : "—" },
+    { label: `Cần để ý · ${ov.weakest.subject}`, value: weakScore !== null ? diem(weakScore) : "—" },
+  ]);
+}
+
+export function narrateOverviewHoiTu(ov: StudentOverview, nextExam: UpcomingExam | null): NarratedLine {
+  const bottom2 = ov.subjects.slice(-2);
+  const topicNames = bottom2
+    .flatMap((e) => e.weakTopics.filter((t) => t.confirmed).map((t) => t.topic))
+    .slice(0, 3);
+  const topicPart = topicNames.length
+    ? ` Các chủ đề cụ thể cần ôn: ${topicNames.join(", ")}.`
+    : "";
+  const action = nextExam
+    ? `nên ôn lại ${ov.weakest.subject} trước ${nextExam.title}`
+    : `nên tập trung thêm vào ${ov.weakest.subject}`;
+  const text = `Em ${action}.${topicPart}`;
+  const figures: { label: string; value: string }[] = [
+    { label: "Môn cần để ý", value: ov.weakest.subject },
+  ];
+  if (ov.weakest.latestExamScore !== null) {
+    figures.push({ label: "Điểm gần nhất", value: diem(ov.weakest.latestExamScore) });
+  }
+  if (nextExam) {
+    figures.push({ label: nextExam.title, value: nextExam.date });
+  }
+  return line(text, figures);
 }
