@@ -1,6 +1,6 @@
 import type { ReportRepository } from "./repository";
 import type { ClassJourney, ClassReport, ExamPaper, Ky, MissionDetail, SchoolReport, StudentJourney, StudentProfile, Subject } from "./types";
-import { getWorld, getHongTeaching, getHongProfile, CLASS_HERO, DIA_TOPICS } from "./mock/world";
+import { getWorld, getHongProfile, CLASS_HERO, DIA_TOPICS } from "./mock/world";
 import { getStudentOverview, getClassOverview } from "./mock/overview";
 import { ACCOUNTS } from "./mock/accounts";
 import { buildClassReport, buildPhong, buildSchoolReport, buildStudentProfile } from "./mock/builders";
@@ -55,7 +55,6 @@ export const mockRepository: ReportRepository = {
   },
   getClassReport,
   getStudentProfile,
-  getTeaching: () => getHongTeaching(),
   getTeacherProfile: (_teacherId: string) => getHongProfile(),
 
   getStudentJourney: (studentId: string, term: Ky, subject: Subject) => {

@@ -8,7 +8,6 @@ import CacTruong from "@/routes/cac-truong";
 import SoSanhMon from "@/routes/so-sanh-mon";
 import Truong from "@/routes/truong";
 import CacLop from "@/routes/cac-lop";
-import LopBoMon from "@/routes/lop-bo-mon";
 import DanhSachHocSinh from "@/routes/danh-sach-hoc-sinh";
 import Lop from "@/routes/lop";
 import HocSinh from "@/routes/hoc-sinh";
@@ -35,7 +34,6 @@ export const router = createBrowserRouter([
       { path: "so-sanh-mon", element: <SoSanhMon /> },
       { path: "truong/:schoolId", element: <Truong /> },
       { path: "cac-lop", element: <CacLop /> },
-      { path: "lop-bo-mon", element: <LopBoMon /> },
       { path: "danh-sach-hoc-sinh", element: <DanhSachHocSinh /> },
       { path: "lop/:classId", element: <Lop /> },
       { path: "hoc-sinh/:studentId", element: <HocSinh /> },

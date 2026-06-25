@@ -30,8 +30,6 @@ export function sidebarSections(account: Account): SideSection[] {
       ];
     case "giaovien":
       return [
-        { label: "Lớp chủ nhiệm", to: `/app/lop/${account.scopeId}?tab=tong-hop`, icon: "homeroom", active: (p) => p === `/app/lop/${account.scopeId}` },
-        { label: "Lớp bộ môn", to: "/app/lop-bo-mon", icon: "subjects", active: (p) => startsAny(p, ["/app/lop-bo-mon"]) || (p.startsWith("/app/lop/") && p !== `/app/lop/${account.scopeId}`) },
         { label: "Học sinh", to: "/app/danh-sach-hoc-sinh", icon: "students", active: (p) => startsAny(p, ["/app/danh-sach-hoc-sinh", "/app/hoc-sinh"]) },
       ];
     case "hocsinh":

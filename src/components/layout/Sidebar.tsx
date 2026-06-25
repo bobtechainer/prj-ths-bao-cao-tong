@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useUiStore } from "@/stores/uiStore";
 import { sidebarSections, type IconKey } from "@/lib/sidebarNav";
 import { cn } from "@/lib/utils";
+import { TeacherNav } from "./TeacherNav";
 
 const ICON: Record<IconKey, typeof Home> = {
   overview: LayoutDashboard,
@@ -35,19 +36,20 @@ function NavBody({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+      {account.role === "giaovien" && (
+        <div className="mb-2">
+          <TeacherNav teacherId={account.scopeId} onNavigate={onNavigate} />
+        </div>
+      )}
       {sections.map((s) => {
         const Icon = ICON[s.icon];
         const isActive = s.active(location.pathname);
         return (
-          <Link
-            key={s.label}
-            to={s.to}
-            onClick={onNavigate}
+          <Link key={s.label} to={s.to} onClick={onNavigate}
             className={cn(
               "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
               isActive ? "bg-brand-50 text-brand-700" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}
-          >
+            )}>
             <Icon className="size-4 shrink-0" />
             {s.label}
           </Link>

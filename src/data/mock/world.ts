@@ -1,4 +1,4 @@
-import type { Khoi, Klass, Ky, School, Student, Subject, TeacherProfile, Teaching, UpcomingExam } from "@/data/types";
+import type { Khoi, Klass, Ky, School, Student, Subject, TeacherProfile, UpcomingExam } from "@/data/types";
 import { Rng } from "@/lib/random";
 import { HO, DEM_NAM, DEM_NU, TEN_NAM, TEN_NU, SCHOOL_NAMES } from "./names";
 import { REAL_STUDENTS, type RealStudent } from "./sontay.real";
@@ -215,18 +215,9 @@ export function getHongProfile(): TeacherProfile {
       { classId: "son-tay-12-toán", subject: "Địa lí" },
       { classId: "son-tay-12-anh", subject: "Địa lí" },
       { classId: "son-tay-12-lí", subject: "Địa lí" },
-      { classId: "son-tay-12-sinh", subject: "Lịch sử" }, // demo đa môn (seeded)
+      { classId: "son-tay-12-sinh", subject: "Lịch sử" }, // đa môn (seeded)
     ],
   };
-}
-
-/** Phân công của GV Nguyễn Minh Hồng: chủ nhiệm 12 Văn + dạy Địa lí các lớp bộ môn còn lại. */
-export function getHongTeaching(): Teaching {
-  const w = getWorld();
-  const subjectClassIds = w.classes
-    .filter((c) => c.schoolId === SCHOOL_HERO && c.id !== CLASS_HERO)
-    .map((c) => c.id);
-  return { teacherName: "Nguyễn Minh Hồng", subject: "Địa lí", homeroomClassId: CLASS_HERO, subjectClassIds };
 }
 
 // ---- Mốc thời gian cho hành trình ----

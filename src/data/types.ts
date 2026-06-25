@@ -32,14 +32,6 @@ export interface Klass {
   studentIds: string[];
 }
 
-// Một giáo viên: 1 lớp chủ nhiệm + nhiều lớp bộ môn (dạy 1 môn).
-export interface Teaching {
-  teacherName: string;
-  subject: Subject;
-  homeroomClassId: string;
-  subjectClassIds: string[];
-}
-
 // Hồ sơ giảng dạy giáo viên: nhiều lớp chủ nhiệm + nhiều (lớp × môn) bộ môn.
 export type TeachingRole = "chu-nhiem" | "bo-mon";
 
