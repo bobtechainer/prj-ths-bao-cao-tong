@@ -113,4 +113,14 @@ describe("buildStudentJourney", () => {
     expect(j.overview.rank).toBe(profile.rank);
     expect(j.overview.classSize).toBe(profile.classSize);
   });
+
+  it("Toán: weakTopics.confirmed dựa trên số bề mặt yếu >= 2", () => {
+    const j = buildStudentJourney(STUDENT_HERO, "ca-nam", "Toán");
+    for (const topic of j.convergence.topics) {
+      const confirmedSurfaces = Object.values(topic.surfaces).filter(Boolean).length;
+      expect(topic.confirmed).toBe(confirmedSurfaces >= 2);
+      expect(topic.accuracyAvg).toBeGreaterThanOrEqual(0);
+      expect(topic.accuracyAvg).toBeLessThanOrEqual(1);
+    }
+  });
 });

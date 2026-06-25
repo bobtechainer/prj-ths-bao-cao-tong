@@ -791,6 +791,9 @@ function buildSeededSlice(
   term: Ky,
   subject: Subject
 ): StudentSubjectSlice {
+  // Overview indices (topics, learning, effort) are seeded on (studentId + subject) only, not term.
+  // This is BY DESIGN: overview is term-invariant, matching the real geography profile.
+  // Terms differ only by which dated events (exams, sessions, missions) fall in each chặng.
   const rng = new Rng("subj-" + studentId + "-" + subject);
   const world = getWorld();
   const student = world.byId.get(studentId)!;
@@ -818,9 +821,14 @@ function buildSeededSlice(
   const topics = SUBJECT_TOPICS[subject];
   const strongCount = rng.int(1, 3);
   const weakCount = rng.int(1, 3);
-  const sortedTopics = [...topics].sort(() => rng.next() - 0.5); // shuffle deterministic
-  const strongTopics = sortedTopics.slice(0, strongCount);
-  const weakNames = sortedTopics.slice(strongCount, strongCount + weakCount);
+  // Fisher–Yates shuffle for deterministic, engine-independent shuffling
+  const shuffled = [...topics];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = rng.int(0, i);
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  const strongTopics = shuffled.slice(0, strongCount);
+  const weakNames = shuffled.slice(strongCount, strongCount + weakCount);
 
   const weakTopics: WeakTopic[] = weakNames.map((topic, i) => {
     const wr = new Rng("weak-subj-" + studentId + "-" + subject + "-" + i);
@@ -877,14 +885,12 @@ function buildSeededSlice(
     `Ôn ${subject} trọng tâm`,
   ];
   const statuses = ["graded", "graded", "submitted", "graded", "inprogress", "todo"] as const;
-  const missionRng = new Rng("mis-subj-" + studentId + "-" + subject);
   const allMissions: MissionStudentReportView[] = missionTitles.map((title, i) => {
     const mr = new Rng("ms-subj-" + studentId + "-" + subject + "-" + i);
     const status = statuses[i];
     const done = status === "graded" || status === "submitted";
     const totalQ = 20;
     const correct = done ? mr.int(11, 19) : 0;
-    void missionRng;
     return {
       missionId: `pm-subj-${studentId}-${subject}-${i}`,
       studentId,
