@@ -8,6 +8,7 @@ import { ExportButton } from "@/components/report/ExportButton";
 import { Journey } from "@/components/journey/Journey";
 import { buildClassChapters } from "@/components/journey/classChapters";
 import { buildClassOverviewChapters } from "@/components/journey/classOverviewChapters";
+import { useUiStore } from "@/stores/uiStore";
 import { cn } from "@/lib/utils";
 
 function parseKy(raw: string | null): Ky {
@@ -25,17 +26,32 @@ export default function Lop() {
 
   const activeClassId = sp.get("class") ?? classId;
   const term = parseKy(sp.get("ky"));
-  const profile = repo.getTeacherProfile(activeClassId);
-  const isHomeroom = profile.homeroomClassIds.includes(activeClassId);
-  // Vai mặc định: lớp chủ nhiệm → cn; còn lại → bm
-  const role: TeachingRole = sp.get("role") === "bm" ? "bo-mon" : sp.get("role") === "cn" ? "chu-nhiem" : isHomeroom ? "chu-nhiem" : "bo-mon";
 
-  // Môn cho vai bộ môn: ưu tiên ?mon=, nếu không suy từ assignment của lớp này
+  // Vai NGƯỜI XEM: chỉ giáo viên mới thấy badge vai + liên kết "của tôi".
+  // Hiệu trưởng (và vai khác) vào lớp từ "Các lớp" → xem trung lập, mặc định tổng quan lớp.
+  const viewerRole = useUiStore((s) => s.role);
+  const isTeacher = viewerRole === "giaovien";
+
+  const profile = repo.getTeacherProfile(activeClassId);
+  // "Lớp chủ nhiệm của tôi" chỉ có nghĩa với giáo viên.
+  const isHomeroom = isTeacher && profile.homeroomClassIds.includes(activeClassId);
+  // Vai HIỂN THỊ: ?role= thắng; trống → GV: chủ nhiệm khi là lớp mình CN, còn lại bộ môn; vai khác mặc định tổng quan.
+  const roleParam = sp.get("role");
+  const role: TeachingRole =
+    roleParam === "bm" ? "bo-mon"
+    : roleParam === "cn" ? "chu-nhiem"
+    : isTeacher ? (isHomeroom ? "chu-nhiem" : "bo-mon")
+    : "chu-nhiem";
+
+  // Môn cho vai bộ môn: ưu tiên ?mon=; GV suy thêm từ assignment của lớp này.
   const assignedHere = profile.subjectAssignments.find((a) => a.classId === activeClassId)?.subject;
-  const subject: Subject = role === "bo-mon" ? parseMon(sp.get("mon") ?? assignedHere ?? null) : "Địa lí";
+  const subject: Subject = role === "bo-mon"
+    ? parseMon(sp.get("mon") ?? (isTeacher ? assignedHere ?? null : null))
+    : "Địa lí";
 
   const klass = repo.getClass(activeClassId);
-  const alsoTeaches = profile.subjectAssignments.find((a) => a.classId === activeClassId)?.subject;
+  // Liên kết chéo "của tôi" chỉ dành cho giáo viên dạy môn ở chính lớp này.
+  const alsoTeaches = isTeacher ? assignedHere : undefined;
 
   const updateQuery = useCallback(
     (next: Record<string, string>) => {
@@ -64,15 +80,17 @@ export default function Lop() {
           subtitle={`${ov.numStudents} học sinh · ${ov.klass.homeroomTeacher}`}
           right={<ExportButton scope={{ kind: "lop", id: activeClassId, title: `Báo cáo lớp ${klass ? klass.name : ""}` }} />}
         />
-        <div className="flex flex-wrap items-center gap-3">
-          <RoleBadge role="chu-nhiem" />
-          {alsoTeaches && (
-            <button type="button" onClick={goSubjectView}
-              className="text-sm font-medium text-brand-700 underline-offset-2 hover:underline">
-              → Xem môn {alsoTeaches} của tôi ở lớp này
-            </button>
-          )}
-        </div>
+        {isTeacher && (
+          <div className="flex flex-wrap items-center gap-3">
+            <RoleBadge role="chu-nhiem" />
+            {alsoTeaches && (
+              <button type="button" onClick={goSubjectView}
+                className="text-sm font-medium text-brand-700 underline-offset-2 hover:underline">
+                → Xem môn {alsoTeaches} của tôi ở lớp này
+              </button>
+            )}
+          </div>
+        )}
         <Journey
           slice={{ term, subject: "Tất cả môn" }}
           availableSlices={{ terms: ["ky-1", "ky-2", "ca-nam"], subjects: ["Tất cả môn"] }}
@@ -104,11 +122,23 @@ export default function Lop() {
         right={<ExportButton scope={{ kind: "lop", id: activeClassId, title: `Báo cáo lớp ${klass ? klass.name : ""}` }} />}
       />
       <div className="flex flex-wrap items-center gap-3">
-        <RoleBadge role="bo-mon" subject={subject} />
-        {isHomeroom && (
+        {isTeacher ? (
+          <RoleBadge role="bo-mon" subject={subject} />
+        ) : (
+          <span className="inline-flex items-center gap-1.5 rounded-full border bg-muted/60 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+            Môn {subject}
+          </span>
+        )}
+        {isTeacher && isHomeroom && (
           <button type="button" onClick={goHomeroomView}
             className="text-sm font-medium text-brand-700 underline-offset-2 hover:underline">
             → Xem toàn lớp (chủ nhiệm)
+          </button>
+        )}
+        {!isTeacher && (
+          <button type="button" onClick={goHomeroomView}
+            className="text-sm font-medium text-brand-700 underline-offset-2 hover:underline">
+            ← Xem tổng quan lớp
           </button>
         )}
       </div>

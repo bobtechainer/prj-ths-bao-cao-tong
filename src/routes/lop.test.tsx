@@ -6,7 +6,7 @@ import Lop from "@/routes/lop";
 import { CLASS_HERO } from "@/data/mock/world";
 import { useUiStore } from "@/stores/uiStore";
 
-useUiStore.setState({ reducedMotion: true });
+useUiStore.setState({ reducedMotion: true, role: "giaovien" });
 
 const renderAt = (url: string) =>
   render(

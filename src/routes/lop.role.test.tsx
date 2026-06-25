@@ -6,7 +6,7 @@ import { useUiStore } from "@/stores/uiStore";
 import { CLASS_HERO } from "@/data/mock/world";
 import Lop from "./lop";
 
-useUiStore.setState({ reducedMotion: true });
+useUiStore.setState({ reducedMotion: true, role: "giaovien" });
 const wrap = (path: string) =>
   render(
     <MemoryRouter initialEntries={[path]}>
