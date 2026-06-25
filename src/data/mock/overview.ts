@@ -1,14 +1,13 @@
 import type { Ky, StudentOverview, SubjectEntry } from "@/data/types";
 import { SUBJECTS } from "@/data/types";
 import { buildStudentSubjectSlice, buildStudentProfile } from "./builders";
-import { getWorld, DEMO_NOW } from "./world";
+import { DEMO_NOW } from "./world";
 
 function mean(xs: number[]): number {
   return xs.reduce((a, b) => a + b, 0) / xs.length;
 }
 
 export function buildStudentOverview(studentId: string, term: Ky): StudentOverview {
-  void getWorld(); // reserved for future use
   const profile = buildStudentProfile(studentId);
   const student = profile.student;
   const className = profile.className;
