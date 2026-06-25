@@ -37,4 +37,16 @@ describe("narrate class overview", () => {
   it("nextExam!=null có 'trước {title}'", () => {
     expect(narrateClassOverviewHoiTu(ov, NEXT).text).toContain("trước " + NEXT.title);
   });
+  it("figure value luôn mang chữ số kể cả khi examAvg là null", () => {
+    const nullOv: ClassOverview = {
+      ...ov,
+      needSupport: 0,
+      strongest: { ...ov.strongest, examAvg: null, learningIndex: 55 },
+      weakest: { ...ov.weakest, examAvg: null, learningIndex: 40 },
+    };
+    for (const l of [narrateClassOverviewCacMon(nullOv), narrateClassOverviewHoiTu(nullOv, null)]) {
+      expect(l.figures.length).toBeGreaterThan(0);
+      for (const f of l.figures) expect(/\d/.test(f.value)).toBe(true);
+    }
+  });
 });

@@ -227,8 +227,8 @@ export function narrateClassOverviewCacMon(ov: ClassOverview): NarratedLine {
   const wPart = w.examAvg !== null ? ` ${diem(w.examAvg)}` : "";
   const text = `Cả lớp nhỉnh nhất ở ${s.subject}${sPart}; còn ${w.subject}${wPart} là môn nên để ý kèm thêm trong kỳ này.`;
   return line(text, [
-    { label: `Cao nhất · ${s.subject}`, value: s.examAvg !== null ? diem(s.examAvg) : "—" },
-    { label: `Cần để ý · ${w.subject}`, value: w.examAvg !== null ? diem(w.examAvg) : "—" },
+    { label: `Cao nhất · ${s.subject}`, value: s.examAvg !== null ? diem(s.examAvg) : String(s.learningIndex) },
+    { label: `Cần để ý · ${w.subject}`, value: w.examAvg !== null ? diem(w.examAvg) : String(w.learningIndex) },
   ]);
 }
 
@@ -241,7 +241,7 @@ export function narrateClassOverviewHoiTu(ov: ClassOverview, nextExam: UpcomingE
   const text = `Cả lớp ${action}.${topicPart}`;
   const figures: { label: string; value: string }[] = [];
   if (ov.weakest.examAvg !== null) figures.push({ label: `Cần để ý · ${ov.weakest.subject}`, value: diem(ov.weakest.examAvg) });
-  else figures.push({ label: "Cần để ý", value: ov.needSupport > 0 ? int(ov.needSupport) : "—" });
+  else figures.push({ label: "Cần để ý", value: ov.needSupport > 0 ? int(ov.needSupport) : String(ov.weakest.learningIndex) });
   if (nextExam) figures.push({ label: nextExam.title, value: nextExam.date });
   return line(text, figures);
 }
