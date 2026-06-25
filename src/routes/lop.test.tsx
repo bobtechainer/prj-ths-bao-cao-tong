@@ -20,14 +20,20 @@ const renderAt = (url: string) =>
   );
 
 describe("route lớp dạng hành trình", () => {
-  test("render hành trình lớp hero với chương Mở đầu và Hội tụ", () => {
-    renderAt(`/app/lop/${CLASS_HERO}?ky=ky-1&mon=Địa lí`);
-    expect(screen.getAllByText("Mở đầu").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Hội tụ").length).toBeGreaterThan(0);
+  test("render không lỗi với lớp hero ở vai chủ nhiệm mặc định", () => {
+    renderAt(`/app/lop/${CLASS_HERO}`);
+    // Lớp chủ nhiệm → mặc định hiện vai chủ nhiệm với chương Các môn
+    expect(screen.getAllByText("Các môn").length).toBeGreaterThan(0);
   });
 
-  test("hiện bộ chọn lớp với lớp chủ nhiệm", () => {
-    renderAt(`/app/lop/${CLASS_HERO}?ky=ky-1&mon=Địa lí`);
-    expect(screen.getAllByText(/chủ nhiệm/).length).toBeGreaterThan(0);
+  test("vai chủ nhiệm hiện badge Chủ nhiệm", () => {
+    renderAt(`/app/lop/${CLASS_HERO}?role=cn`);
+    expect(screen.getByText(/Chủ nhiệm/)).toBeInTheDocument();
+  });
+
+  test("vai bộ môn với ?role=bm&mon=Địa lí hiện hành trình môn Địa lí", () => {
+    renderAt(`/app/lop/${CLASS_HERO}?role=bm&mon=Địa lí`);
+    expect(screen.getAllByText("Mở đầu").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Hội tụ").length).toBeGreaterThan(0);
   });
 });

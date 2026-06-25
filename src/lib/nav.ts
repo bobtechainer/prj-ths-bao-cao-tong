@@ -17,7 +17,7 @@ export function roleHome(acc: Account): string {
     case "truong":
       return `/app/truong/${acc.scopeId}`;
     case "giaovien":
-      return `/app/lop/${acc.scopeId}?tab=tong-hop`;
+      return `/app/lop/${acc.scopeId}?role=cn`;
     case "hocsinh":
       return `/app/hoc-sinh/${acc.scopeId}`;
   }
@@ -50,7 +50,7 @@ export function buildChain(pathname: string, role: Role): Crumb[] {
     if (sch) school = { label: sch.name, to: `/app/truong/${sch.id}`, level: 1 };
     if (cls) {
       khoi = { label: `Khối ${cls.khoi}`, level: 1.5 };
-      klass = { label: cls.name, to: `/app/lop/${cls.id}?tab=tong-hop`, level: 2 };
+      klass = { label: cls.name, to: `/app/lop/${cls.id}?role=cn`, level: 2 };
     }
     student = { label: prof.student.name, level: 3 };
     currentLevel = 3;
