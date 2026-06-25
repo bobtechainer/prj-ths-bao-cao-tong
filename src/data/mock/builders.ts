@@ -392,6 +392,83 @@ export function buildClassReport(classId: string): ClassReport {
   };
 }
 
+/**
+ * ClassReport cho (lớp × môn).
+ * - Địa lí: đúng report thật (buildClassReport).
+ * - Môn khác: biến đổi deterministic — dịch điểm thô theo seed (lớp+môn), giữ cấu trúc,
+ *   đổi nhãn môn + weakTopics sang bộ chủ đề của môn. Chỉ số TÍNH lại từ số thô.
+ */
+export function buildClassSubjectReport(classId: string, subject: Subject): ClassReport {
+  const base = buildClassReport(classId);
+  if (subject === "Địa lí") return base;
+
+  const rng = new Rng("class-subj-" + classId + "-" + subject);
+  const shift = rng.gauss(0, 0.6, -1.4, 1.4); // dịch điểm thô theo môn (deterministic)
+
+  const roster: ClassRosterRow[] = base.roster.map((row, i) => {
+    const rr = new Rng("csr-" + classId + "-" + subject + "-" + i);
+    const exam = r1(clamp(row.exam + shift + rr.gauss(0, 0.3, -1, 1), 0, 10));
+    const home = r1(clamp(row.home + shift * 0.7 + rr.gauss(0, 0.3, -1, 1), 0, 10));
+    const quizLop = clamp(rr.gauss(72, 12, 20, 100), 20, 100);
+    const learning = learningIndex({ thi: normalize(exam, 10), nha: normalize(home, 10), quizLop }).total;
+    const effort = effortIndex({
+      chuyenCan: row.attendance * 100,
+      hoanThanh: rr.bool(0.82) ? 95 : 68,
+      dungHan: rr.bool(0.85) ? 100 : 60,
+    }).total;
+    return { ...row, exam, home, learning, effort, needSupport: exam < 6.5 || learning < 60 };
+  });
+
+  const classExamAvg = mean(roster.map((x) => x.exam));
+  const classHomeAvg = mean(roster.map((x) => x.home));
+  const classQuiz = mean(base.lop.quizzes.map((q) => q.accuracy)) * 100;
+  const classAttendance =
+    base.lop.attendance.present / (base.lop.attendance.present + base.lop.attendance.absent);
+  const classCompletion = mean(base.nha.missions.map((m) => m.completionRate));
+  const onTimeRate = base.nha.students.filter((s) => !s.late).length / base.nha.students.length;
+
+  const learningIdx = learningIndex({
+    thi: normalize(classExamAvg, 10), nha: normalize(classHomeAvg, 10), quizLop: classQuiz,
+  });
+  const effortIdx = effortIndex({
+    chuyenCan: classAttendance * 100, hoanThanh: classCompletion * 100, dungHan: onTimeRate * 100,
+  });
+
+  // weakTopics theo bộ chủ đề của môn (deterministic), cấu trúc giữ như slice seeded học sinh
+  const topics = SUBJECT_TOPICS[subject];
+  const tShuffle = [...topics];
+  for (let k = tShuffle.length - 1; k > 0; k--) {
+    const j = rng.int(0, k);
+    [tShuffle[k], tShuffle[j]] = [tShuffle[j], tShuffle[k]];
+  }
+  const weakTopics: WeakTopic[] = tShuffle.slice(0, 3).map((topic, i) => {
+    const wr = new Rng("cw-" + classId + "-" + subject + "-" + i);
+    const accLop = clamp(wr.gauss(0.55, 0.1, 0.2, 0.95), 0.2, 0.95);
+    const accNha = clamp(wr.gauss(0.7, 0.1, 0.3, 0.98), 0.3, 0.98);
+    const accThi = clamp(wr.gauss(0.52, 0.1, 0.2, 0.9), 0.2, 0.9);
+    const surfaces = { lop: accLop < 0.6, nha: accNha < 0.6, thi: accThi < 0.6 };
+    const n = Number(surfaces.lop) + Number(surfaces.nha) + Number(surfaces.thi);
+    return { topic, surfaces, confirmed: n >= 2, accuracyAvg: (accLop + accNha + accThi) / 3 };
+  });
+
+  const examScores = roster.map((x) => x.exam);
+  const avg = r1(classExamAvg);
+  const sortedScores = [...examScores].sort((a, b) => a - b);
+  const med = r1(sortedScores[Math.floor(sortedScores.length / 2)] ?? avg);
+
+  return {
+    ...base,
+    subject,
+    learningIndex: learningIdx,
+    effortIndex: effortIdx,
+    bands: toBands(examScores, 10),
+    weakTopics,
+    roster,
+    effortVsResult: roster.map((x) => ({ studentId: x.studentId, name: x.name, effort: x.effort, result: x.learning })),
+    thi: { ...base.thi, avg, median: med },
+  };
+}
+
 // ---- Cấp trường ----
 interface ClassSummary {
   classId: string;

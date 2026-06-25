@@ -5,7 +5,7 @@ import type {
 } from "@/data/types";
 import { SUBJECTS } from "@/data/types";
 import {
-  buildStudentProfile, buildClassReport,
+  buildStudentProfile, buildClassReport, buildClassSubjectReport,
   buildStudentSubjectSlice,
   studentExamsForKy, missionDate,
   buildClassPrepSurface,
@@ -167,7 +167,7 @@ export function buildStudentJourney(studentId: string, term: Ky, subject: Subjec
 }
 
 export function buildClassJourney(classId: string, term: Ky, subject: Subject): ClassJourney {
-  const report = buildClassReport(classId);
+  const report = buildClassSubjectReport(classId, subject);
   const now = DEMO_NOW;
   const nextExam = resolveNextExam(now);
   const boundaries = KY_BOUNDARIES[term];
