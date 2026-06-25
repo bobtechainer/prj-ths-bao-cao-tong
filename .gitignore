@@ -26,3 +26,6 @@ pnpm-debug.log*
 
 # subagent-driven-development scratch ledger
 .superpowers/
+
+# dev server log
+dev.log

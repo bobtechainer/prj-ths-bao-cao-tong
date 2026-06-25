@@ -28,11 +28,8 @@ describe("buildOverviewChapters", () => {
     const chapters = buildOverviewChapters(ov, vi.fn());
     const moDau = chapters.find((c) => c.id === "mo-dau")!;
     wrap(<>{moDau.render()}</>);
-    // The narrator text from narrateOverviewMoDau contains overallLearningIndex
-    // Use getAllByText to find all occurrences (ProgressRing + Narrator)
-    expect(
-      screen.getAllByText(new RegExp(String(ov.overallLearningIndex))).length
-    ).toBeGreaterThanOrEqual(1);
+    // hideValue on ProgressRing suppresses CountUp; value appears in Narrator <p> text
+    expect(screen.getByText(new RegExp(String(ov.overallLearningIndex)), { selector: 'p' })).toBeInTheDocument();
   });
 
   test("cac-mon chapter shows all 8 subject names", () => {
@@ -66,9 +63,7 @@ describe("buildOverviewChapters", () => {
     const chapters = buildOverviewChapters(ov, vi.fn());
     const hoiTu = chapters.find((c) => c.id === "hoi-tu")!;
     wrap(<>{hoiTu.render()}</>);
-    // Use getAllByText to find all occurrences (Narrator text + figure badge)
-    expect(
-      screen.getAllByText(new RegExp(ov.weakest.subject)).length
-    ).toBeGreaterThanOrEqual(1);
+    // weakest.subject appears in the Narrator <p> sentence (also in figure chip + card title — scope to <p>)
+    expect(screen.getByText(new RegExp(ov.weakest.subject), { selector: "p" })).toBeInTheDocument();
   });
 });

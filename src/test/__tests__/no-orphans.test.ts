@@ -41,7 +41,8 @@ describe("dọn dẹp", () => {
 
   test("không còn chữ demo / minh hoạ trong src", () => {
     const offenders = walk(SRC).filter((f) => {
-      if (/no-orphans\.test\.ts$/.test(f)) return false; // tự loại trừ file test này
+      // Chỉ quét mã sản phẩm: bỏ qua mọi file test/spec (chúng tham chiếu chữ cấm để kiểm tra sự vắng mặt).
+      if (/\.test\.tsx?$/.test(f) || /[\\/]__tests__[\\/]/.test(f)) return false;
       return /\bdemo\b|minh\s*ho[aạ]/i.test(readFileSync(f, "utf8"));
     });
     expect(offenders).toEqual([]);

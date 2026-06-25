@@ -70,7 +70,7 @@ export function buildOverviewChapters(
         <div className="space-y-4">
           <Narrator line={narrateOverviewHoiTu(ov, nextExam)} />
           {ov.weakest.weakTopics.length > 0 && (
-            <ChartCard title="Chủ đề cần chú ý">
+            <ChartCard title={`Chủ đề cần chú ý — ${ov.weakest.subject}`}>
               <ul className="space-y-1.5 text-sm">
                 {ov.weakest.weakTopics
                   .filter((t) => t.confirmed)
