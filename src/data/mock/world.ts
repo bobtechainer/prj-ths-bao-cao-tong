@@ -1,4 +1,4 @@
-import type { Khoi, Klass, Ky, School, Student, Subject, Teaching, UpcomingExam } from "@/data/types";
+import type { Khoi, Klass, Ky, School, Student, Subject, TeacherProfile, Teaching, UpcomingExam } from "@/data/types";
 import { Rng } from "@/lib/random";
 import { HO, DEM_NAM, DEM_NU, TEN_NAM, TEN_NU, SCHOOL_NAMES } from "./names";
 import { REAL_STUDENTS, type RealStudent } from "./sontay.real";
@@ -201,6 +201,23 @@ export function getWorld(): World {
 
   cached = { schools, classes, students, byId, classById, schoolById, realByName, heroRoster };
   return cached;
+}
+
+/** Hồ sơ giảng dạy đầy đủ của cô Hồng: 2 chủ nhiệm + dạy Địa lí + Lịch sử. */
+export function getHongProfile(): TeacherProfile {
+  // Dùng lớp Sơn Tây có sẵn (không tạo lớp mới). Địa lí ở 12 Văn = số thật.
+  return {
+    teacherId: CLASS_HERO,
+    teacherName: "Nguyễn Minh Hồng",
+    homeroomClassIds: [CLASS_HERO, "son-tay-12-hóa"],
+    subjectAssignments: [
+      { classId: CLASS_HERO, subject: "Địa lí" },        // dạy môn trong lớp chủ nhiệm (THẬT)
+      { classId: "son-tay-12-toán", subject: "Địa lí" },
+      { classId: "son-tay-12-anh", subject: "Địa lí" },
+      { classId: "son-tay-12-lí", subject: "Địa lí" },
+      { classId: "son-tay-12-sinh", subject: "Lịch sử" }, // demo đa môn (seeded)
+    ],
+  };
 }
 
 /** Phân công của GV Nguyễn Minh Hồng: chủ nhiệm 12 Văn + dạy Địa lí các lớp bộ môn còn lại. */

@@ -1,7 +1,7 @@
 import type {
   Account, ClassJourney, ClassReport, ExamPaper, Klass, Ky, MissionDetail, PhongOverview, School, SchoolReport,
   Student, StudentExamSubmission, StudentJourney, StudentMissionSubmission, StudentProfile, StudentOverview,
-  Subject, Teaching,
+  Subject, TeacherProfile, Teaching,
 } from "./types";
 
 export interface ReportRepository {
@@ -17,6 +17,7 @@ export interface ReportRepository {
   getClassReport(classId: string): ClassReport;
   getStudentProfile(studentId: string): StudentProfile;
   getTeaching(): Teaching;
+  getTeacherProfile(teacherId: string): TeacherProfile;
   getExamPaper(examId: string): ExamPaper;
   getStudentExamSubmission(examId: string, key: string): StudentExamSubmission;
   getMissionDetail(missionId: string): MissionDetail;
