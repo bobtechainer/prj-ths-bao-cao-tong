@@ -15,7 +15,7 @@ export function Chapter({
   children: ReactNode;
 }) {
   return (
-    <section id={id} data-status={status} className="snap-start scroll-mt-24 py-2">
+    <section id={id} data-status={status} className="scroll-mt-24 py-2">
       <Reveal>
         <h2 className="mb-3 text-lg font-semibold tracking-tight">{title}</h2>
         <div className="space-y-4">{children}</div>

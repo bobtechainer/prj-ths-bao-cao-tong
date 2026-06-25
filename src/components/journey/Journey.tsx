@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Play } from "lucide-react";
 import type { Ky, Subject, EventStatus } from "@/data/types";
-import { useReduced } from "@/components/motion";
 import type { ChapterDef } from "./types-journey";
 import { KyMonPicker } from "./KyMonPicker";
 import { TimelineRail } from "./TimelineRail";
@@ -26,10 +25,8 @@ export function Journey({
   chapters: ChapterDef[];
   initialPresent?: boolean;
 }): JSX.Element {
-  const reduced = useReduced();
   const [present, setPresent] = useState(!!initialPresent);
   const [activeId, setActiveId] = useState<string | undefined>(timeline[0]?.id);
-  const sectionRefs = useRef<Map<string, Element>>(new Map());
 
   // Scrollspy: observe each chapter section in the viewport (AppShell's <main> is root)
   useEffect(() => {
@@ -59,23 +56,13 @@ export function Journey({
       }
     );
 
-    const elements = sectionRefs.current;
     ids.forEach((id) => {
-      const el = elements.get(id) ?? document.getElementById(id);
+      const el = document.getElementById(id);
       if (el) observer.observe(el);
     });
 
     return () => observer.disconnect();
   }, [timeline]);
-
-  // Register chapter section elements via callback ref pattern
-  const setRef = (id: string) => (el: Element | null) => {
-    if (el) {
-      sectionRefs.current.set(id, el);
-    } else {
-      sectionRefs.current.delete(id);
-    }
-  };
 
   return (
     <div className="space-y-4">
@@ -107,16 +94,11 @@ export function Journey({
         </aside>
 
         {/* Plain block: flows in AppShell's <main> scroller — no fixed height, no overflow */}
-        <div
-          className="space-y-10 md:space-y-12"
-          style={!reduced ? { scrollBehavior: "smooth" } : undefined}
-        >
+        <div className="space-y-10 md:space-y-12">
           {chapters.map((c) => (
-            <div key={c.id} ref={setRef(c.id) as React.Ref<HTMLDivElement>}>
-              <Chapter id={c.id} title={c.title} status={c.status}>
-                {c.render()}
-              </Chapter>
-            </div>
+            <Chapter key={c.id} id={c.id} title={c.title} status={c.status}>
+              {c.render()}
+            </Chapter>
           ))}
         </div>
       </div>
