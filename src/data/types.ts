@@ -115,6 +115,11 @@ export const SUBJECTS = [
 ] as const;
 export type Subject = (typeof SUBJECTS)[number];
 
+/** Nhãn lát "tất cả môn" cho overview chéo môn của học sinh. */
+export const ALL_SUBJECTS_LABEL = "Tất cả môn" as const;
+/** Bộ lọc môn ở picker: một môn cụ thể HOẶC "Tất cả môn" (overview). */
+export type SubjectFilter = Subject | typeof ALL_SUBJECTS_LABEL;
+
 // ---- Chỉ số tổng hợp ----
 export interface IndexPart {
   label: string;

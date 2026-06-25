@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Play } from "lucide-react";
-import type { Ky, Subject, EventStatus } from "@/data/types";
+import type { Ky, SubjectFilter, EventStatus } from "@/data/types";
 import type { ChapterDef } from "./types-journey";
 import { KyMonPicker } from "./KyMonPicker";
 import { TimelineRail } from "./TimelineRail";
@@ -18,9 +18,9 @@ export function Journey({
   chapters,
   initialPresent,
 }: {
-  slice: { term: Ky; subject: Subject };
-  availableSlices: { terms: Ky[]; subjects: Subject[] };
-  onSlice: (s: { term: Ky; subject: Subject }) => void;
+  slice: { term: Ky; subject: SubjectFilter };
+  availableSlices: { terms: Ky[]; subjects: SubjectFilter[] };
+  onSlice: (s: { term: Ky; subject: SubjectFilter }) => void;
   timeline: { id: string; label: string; status: EventStatus }[];
   chapters: ChapterDef[];
   initialPresent?: boolean;

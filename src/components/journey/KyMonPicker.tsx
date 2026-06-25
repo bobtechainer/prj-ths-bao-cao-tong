@@ -1,4 +1,4 @@
-import type { Ky, Subject } from "@/data/types";
+import type { Ky, SubjectFilter } from "@/data/types";
 import { KY_LABEL } from "@/data/types";
 import { cn } from "@/lib/utils";
 
@@ -36,10 +36,10 @@ export function KyMonPicker({
   onChange,
 }: {
   term: Ky;
-  subject: Subject;
+  subject: SubjectFilter;
   terms: Ky[];
-  subjects: Subject[];
-  onChange: (next: { term: Ky; subject: Subject }) => void;
+  subjects: SubjectFilter[];
+  onChange: (next: { term: Ky; subject: SubjectFilter }) => void;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
