@@ -448,6 +448,39 @@ export interface StudentJourney {
   empty: boolean;
 }
 
+/** Một môn trong overview tổng hợp. */
+export interface SubjectEntry {
+  subject: Subject;
+  /** Điểm thi gần nhất (exams.at(-1).score) hoặc null nếu chưa có bài thi. */
+  latestExamScore: number | null;
+  /** learningIndex.total đã tính từ buildStudentSubjectSlice. */
+  learningIndex: number;
+  /** effortIndex.total. */
+  effortIndex: number;
+  rank: number;
+  classSize: number;
+  trend: "up" | "flat" | "down";
+  weakTopics: WeakTopic[];
+}
+
+export interface StudentOverview {
+  kind: "overview";
+  slice: { term: Ky; subject: "Tất cả môn" };
+  now: string;
+  student: Student;
+  className: string;
+  schoolName: string;
+  /** Danh sách 8 môn, sorted strongest→weakest by latestExamScore (null last). */
+  subjects: SubjectEntry[];
+  /** Trung bình learningIndex qua 8 môn. */
+  overallLearningIndex: number;
+  /** Môn có điểm cao nhất (latestExamScore). */
+  strongest: SubjectEntry;
+  /** Môn có điểm thấp nhất (latestExamScore). */
+  weakest: SubjectEntry;
+  availableSlices: { terms: Ky[]; subjects: string[] };
+}
+
 export interface ClassCycle {
   id: string;
   label: string;
