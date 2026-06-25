@@ -40,6 +40,36 @@ export interface Teaching {
   subjectClassIds: string[];
 }
 
+// Hồ sơ giảng dạy giáo viên: nhiều lớp chủ nhiệm + nhiều (lớp × môn) bộ môn.
+export type TeachingRole = "chu-nhiem" | "bo-mon";
+
+export interface SubjectAssignment {
+  classId: string;
+  subject: Subject;
+}
+
+export interface TeacherProfile {
+  teacherId: string;
+  teacherName: string;
+  homeroomClassIds: string[];
+  subjectAssignments: SubjectAssignment[];
+}
+
+export interface ClassTreeLeaf {
+  classId: string;
+  className: string;
+  role: TeachingRole;
+  subject?: Subject;            // khi role==="bo-mon"
+  alsoTeachesSubject?: Subject; // khi role==="chu-nhiem" và GV cũng dạy môn ở lớp này
+  to: string;                   // URL kèm ?role= & ?mon=
+}
+
+export interface ClassTreeGroup {
+  key: string;   // "chu-nhiem" | "bo-mon:Địa lí" | ...
+  label: string; // "Chủ nhiệm" | "Bộ môn · Địa lí"
+  leaves: ClassTreeLeaf[];
+}
+
 // ---- Ngân hàng câu hỏi & bài làm (dẫn chứng) ----
 export interface ExamQuestion {
   id: string;
