@@ -5,7 +5,7 @@ import { ReportDocument } from "@/components/report/ReportDocument";
 import { STUDENT_HERO } from "@/data/mock/world";
 
 describe("ReportDocument — hành trình học sinh in dạng dài", () => {
-  test("in nhiều trang hành trình, có Mở đầu / Chuẩn bị / Hội tụ và Trợ lý bám số", () => {
+  test("in nhiều trang hành trình, có Mở đầu / Chuẩn bị / Tổng kết và Trợ lý bám số", () => {
     const { container } = render(
       <MemoryRouter>
         <ReportDocument scope={{ kind: "hoc-sinh", id: STUDENT_HERO, title: "" }} />
@@ -15,7 +15,7 @@ describe("ReportDocument — hành trình học sinh in dạng dài", () => {
     expect(container.querySelectorAll(".report-page").length).toBeGreaterThan(2);
     expect(screen.getByText("Mở đầu")).toBeInTheDocument();
     expect(screen.getByText("Chuẩn bị")).toBeInTheDocument();
-    expect(screen.getByText("Hội tụ")).toBeInTheDocument();
+    expect(screen.getByText("Tổng kết")).toBeInTheDocument();
     // Trợ lý phần tổng quan có ít nhất một figure
     expect(screen.getAllByText("Chỉ số học tập").length).toBeGreaterThan(0);
   });

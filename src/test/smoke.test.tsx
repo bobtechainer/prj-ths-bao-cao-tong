@@ -59,9 +59,9 @@ describe("smoke — màn hình render không lỗi", () => {
     expect(screen.getByText("Trợ lý tóm tắt")).toBeInTheDocument();
   });
 
-  test("ReportDocument in hành trình học sinh có Hội tụ", () => {
+  test("ReportDocument in hành trình học sinh có Tổng kết", () => {
     const { container } = wrap(<ReportDocument scope={{ kind: "hoc-sinh", id: STUDENT_HERO, title: "" }} />);
-    expect(within(container).getByText("Hội tụ")).toBeInTheDocument();
+    expect(within(container).getByText("Tổng kết")).toBeInTheDocument();
     expect(container.querySelectorAll(".report-page").length).toBeGreaterThan(2);
   });
 

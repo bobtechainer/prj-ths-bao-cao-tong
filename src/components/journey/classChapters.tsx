@@ -243,7 +243,7 @@ export function buildClassChapters(j: ClassJourney, nav: (to: string) => void): 
 
   const hoiTu: ChapterDef = {
     id: "hoi-tu",
-    title: "Hội tụ",
+    title: "Tổng kết",
     status: "current",
     render: () => (
       <div className="space-y-5">

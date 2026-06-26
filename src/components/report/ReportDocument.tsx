@@ -329,8 +329,8 @@ function StudentJourneyPages({ j }: { j: StudentJourney }) {
         <StudentCyclePage key={c.id} c={c} idx={i + 1} />
       ))}
 
-      <Page footer="Hội tụ">
-        <H>Hội tụ</H>
+      <Page footer="Tổng kết">
+        <H>Tổng kết</H>
         <NarratorLine line={j.convergence.narration} />
         <H>Chủ đề cần củng cố</H>
         <Bars
@@ -413,8 +413,8 @@ function ClassJourneyPages({ j }: { j: ClassJourney }) {
         <ClassCyclePage key={c.id} c={c} idx={i + 1} />
       ))}
 
-      <Page footer="Hội tụ">
-        <H>Hội tụ</H>
+      <Page footer="Tổng kết">
+        <H>Tổng kết</H>
         <NarratorLine line={j.convergence.narration} />
         <H>Chủ đề cần củng cố toàn lớp</H>
         <Bars

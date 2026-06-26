@@ -34,6 +34,6 @@ describe("route lớp dạng hành trình", () => {
   test("vai bộ môn với ?role=bm&mon=Địa lí hiện hành trình môn Địa lí", () => {
     renderAt(`/app/lop/${CLASS_HERO}?role=bm&mon=Địa lí`);
     expect(screen.getAllByText("Mở đầu").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Hội tụ").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Tổng kết").length).toBeGreaterThan(0);
   });
 });

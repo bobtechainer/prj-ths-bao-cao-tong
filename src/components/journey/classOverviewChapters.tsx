@@ -52,7 +52,7 @@ export function buildClassOverviewChapters(
     },
     {
       id: "hoi-tu",
-      title: "Hội tụ",
+      title: "Tổng kết",
       render: () => (
         <div className="space-y-4">
           <Narrator line={narrateClassOverviewHoiTu(ov, nextExam)} />
